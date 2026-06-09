@@ -249,36 +249,50 @@ def normalize_columns(df):
     return df
 
 # Dynamic Path Resolver to handle Windows encoding issues in directory names
+# and support both local and Streamlit Cloud layouts (where app.py is in repo root or subfolder)
 def resolve_path(prefix, subpath=""):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_dir = os.path.join(base_dir, '..')
-    if not os.path.exists(parent_dir):
-        return os.path.join(parent_dir, prefix)
-        
-    for item in os.listdir(parent_dir):
-        if item.upper().startswith(prefix.upper()):
-            current_path = os.path.join(parent_dir, item)
-            if not subpath:
-                return current_path
+    
+    # We search in multiple directory levels relative to app.py
+    search_dirs = [
+        base_dir,                             # app.py is at the root of the repo (Streamlit Cloud setup)
+        os.path.join(base_dir, '..'),         # app.py is inside websitekodlar (Local setup)
+        os.path.join(base_dir, '..', '..')    # fallback
+    ]
+    
+    for parent_dir in search_dirs:
+        if not os.path.exists(parent_dir):
+            continue
+        try:
+            for item in os.listdir(parent_dir):
+                if item.upper().startswith(prefix.upper()):
+                    current_path = os.path.join(parent_dir, item)
+                    if not subpath:
+                        return current_path
+                    
+                    # Resolve subpath parts dynamically
+                    parts = [p for p in subpath.replace('\\', '/').split('/') if p]
+                    for part in parts:
+                        if os.path.isdir(current_path):
+                            found = False
+                            for sub_item in os.listdir(current_path):
+                                clean_sub = sub_item.upper().replace('İ', 'I').replace('Ü', 'U').replace('Ş', 'S').replace('Ö', 'O').replace('Ç', 'C').replace('Ğ', 'G')
+                                clean_part = part.upper().replace('İ', 'I').replace('Ü', 'U').replace('Ş', 'S').replace('Ö', 'O').replace('Ç', 'C').replace('Ğ', 'G')
+                                if clean_sub == clean_part or clean_sub.startswith(clean_part):
+                                    current_path = os.path.join(current_path, sub_item)
+                                    found = True
+                                    break
+                            if not found:
+                                current_path = os.path.join(current_path, part)
+                        else:
+                            current_path = os.path.join(current_path, part)
+                    if os.path.exists(current_path):
+                        return current_path
+        except Exception:
+            pass
             
-            # Resolve subpath parts dynamically
-            parts = [p for p in subpath.replace('\\', '/').split('/') if p]
-            for part in parts:
-                if os.path.isdir(current_path):
-                    found = False
-                    for sub_item in os.listdir(current_path):
-                        clean_sub = sub_item.upper().replace('İ', 'I').replace('Ü', 'U').replace('Ş', 'S').replace('Ö', 'O').replace('Ç', 'C').replace('Ğ', 'G')
-                        clean_part = part.upper().replace('İ', 'I').replace('Ü', 'U').replace('Ş', 'S').replace('Ö', 'O').replace('Ç', 'C').replace('Ğ', 'G')
-                        if clean_sub == clean_part or clean_sub.startswith(clean_part):
-                            current_path = os.path.join(current_path, sub_item)
-                            found = True
-                            break
-                    if not found:
-                        current_path = os.path.join(current_path, part)
-                else:
-                    current_path = os.path.join(current_path, part)
-            return current_path
-    return os.path.join(parent_dir, prefix)
+    # Default fallback
+    return os.path.join(base_dir, '..', prefix)
 
 # Data Loader
 @st.cache_data
@@ -312,7 +326,7 @@ def load_all_circulars():
             st.info(f"ℹ️ Bilgi: {flag_name} Excel dosyası yerelde bulunamadı ({excel_path}).")
             
     if not all_dfs:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=['Filename', 'Category', 'Subject_EN', 'Subject_TR', 'References', 'Summary_EN', 'Summary_TR', 'Flag', 'Excel_Path', 'PDF_Dir'])
         
     merged_df = pd.concat(all_dfs, ignore_index=True)
     
@@ -326,6 +340,7 @@ def load_all_circulars():
     # Apply text cleaning for UI layout
     for col in ['Filename', 'Subject_EN', 'Subject_TR', 'References', 'Summary_EN', 'Summary_TR']:
         merged_df[col] = merged_df[col].apply(clean_cell_text)
+
         
     # Standardize Category
     def standardize_category(row):
