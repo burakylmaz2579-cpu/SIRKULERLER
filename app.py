@@ -2,6 +2,7 @@ import os
 import urllib.parse
 import streamlit as st
 import pandas as pd
+import hashlib
 
 # Set page config
 st.set_page_config(
@@ -26,16 +27,17 @@ st.markdown("""
         color: #0f172a;
     }
     
-    /* Sidebar styling */
+    /* Sidebar styling (Clean Light Theme for visibility) */
     [data-testid="stSidebar"] {
-        background-color: #0f172a;
-        border-right: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
     }
     
     /* Sidebar text colors */
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
     [data-testid="stSidebar"] label {
-        color: #f8fafc !important;
+        color: #0f172a !important;
+        font-weight: 500;
     }
     
     /* Clean white cards with light borders and soft shadows */
@@ -123,29 +125,6 @@ st.markdown("""
     }
     .badge-flag { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     .badge-cat { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
-
-    /* Tables styles */
-    .dataframe {
-        border-collapse: collapse;
-        width: 100%;
-        color: #0f172a;
-        font-size: 0.9rem;
-    }
-    .dataframe th {
-        background-color: #f1f5f9;
-        color: #0f172a;
-        font-weight: 600;
-        text-align: left;
-        padding: 12px;
-        border-bottom: 2px solid #e2e8f0;
-    }
-    .dataframe td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .dataframe tr:hover {
-        background-color: #f8fafc;
-    }
     
     /* Scrollbar */
     ::-webkit-scrollbar {
@@ -206,7 +185,7 @@ def clean_cell_text(val):
         val = val.replace(corrupted, corrected)
     return val
 
-# Automatically classify categories for rows without a category (Panama, Sierra Leone)
+# Automatically classify categories for rows without a category
 def classify_category(row):
     subject = str(row.get('Subject_EN', '')).lower() + " " + str(row.get('Subject_TR', '')).lower()
     summary = str(row.get('Summary_EN', '')).lower() + " " + str(row.get('Summary_TR', '')).lower()
@@ -238,17 +217,19 @@ def normalize_columns(df):
         elif 'kategori' in col_lower:
             mapping[col] = 'Category'
         elif 'konu' in col_lower:
-            if 'türkçe' in col_lower or 'turkce' in col_lower or 'trke' in col_lower:
+            if 'türkçe' in col_lower or 'turkce' in col_lower or 'trke' in col_lower or 'trk' in col_lower or 't\u00fcrk' in col_lower:
                 mapping[col] = 'Subject_TR'
             else:
                 mapping[col] = 'Subject_EN'
-        elif 'referans' in col_lower or 'dayan' in col_lower:
+        elif 'referans' in col_lower or 'dayan' in col_lower or 'kural' in col_lower:
             mapping[col] = 'References'
         elif 'özet' in col_lower or 'ozet' in col_lower or 'zet' in col_lower or 'summary' in col_lower:
-            if 'türkçe' in col_lower or 'turkce' in col_lower or 'trke' in col_lower:
+            if 'türkçe' in col_lower or 'turkce' in col_lower or 'trke' in col_lower or 'trk' in col_lower or 't\u00fcrk' in col_lower:
                 mapping[col] = 'Summary_TR'
             else:
                 mapping[col] = 'Summary_EN'
+        elif 'tavsiye' in col_lower or 'ne yap' in col_lower or 'rec' in col_lower or 'action' in col_lower:
+            mapping[col] = 'Recommendations_TR'
     df = df.rename(columns=mapping)
     return df
 
@@ -257,23 +238,11 @@ def clean_filename_to_title(filename):
     title = filename
     if title.lower().endswith('.pdf'):
         title = title[:-4]
-    
-    # URL Decode
     title = urllib.parse.unquote(title)
-    
-    # Replace dashes and underscores with spaces
     title = title.replace('-', ' ').replace('_', ' ')
-    
-    # Clean up double spaces
-    import re
     title = re.sub(r'\s+', ' ', title).strip()
-    
-    # Capitalize
-    title = title.title()
-    
-    return title
+    return title.title()
 
-# Classify category dynamically from a text query (e.g. filename)
 def classify_category_from_text(text):
     combined = text.lower()
     categories = []
@@ -292,18 +261,14 @@ def classify_category_from_text(text):
         return "Genel / Diğer"
     return ", ".join(categories)
 
-# Dynamic Path Resolver to handle Windows encoding issues in directory names
-# and support both local and Streamlit Cloud layouts (where app.py is in repo root or subfolder)
+# Dynamic Path Resolver
 def resolve_path(prefix, subpath=""):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # We search in multiple directory levels relative to app.py
     search_dirs = [
-        base_dir,                             # app.py is at the root of the repo (Streamlit Cloud setup)
-        os.path.join(base_dir, '..'),         # app.py is inside websitekodlar (Local setup)
-        os.path.join(base_dir, '..', '..')    # fallback
+        base_dir,
+        os.path.join(base_dir, '..'),
+        os.path.join(base_dir, '..', '..')
     ]
-    
     for parent_dir in search_dirs:
         if not os.path.exists(parent_dir):
             continue
@@ -314,7 +279,6 @@ def resolve_path(prefix, subpath=""):
                     if not subpath:
                         return current_path
                     
-                    # Resolve subpath parts dynamically
                     parts = [p for p in subpath.replace('\\', '/').split('/') if p]
                     for part in parts:
                         if os.path.isdir(current_path):
@@ -334,11 +298,9 @@ def resolve_path(prefix, subpath=""):
                         return current_path
         except Exception:
             pass
-            
-    # Default fallback
     return os.path.join(base_dir, '..', prefix)
 
-# Data Loader (PDF-first parser with Excel support)
+# Data Loader
 @st.cache_data
 def load_all_circulars():
     configs = {
@@ -351,7 +313,6 @@ def load_all_circulars():
     }
     
     all_records = []
-    
     for flag_name, (prefix, excel_subpath, pdf_subpath) in configs.items():
         excel_path = resolve_path(prefix, excel_subpath)
         pdf_dir = resolve_path(prefix, pdf_subpath)
@@ -365,7 +326,6 @@ def load_all_circulars():
             except Exception as e:
                 st.warning(f"⚠️ Hata: {flag_name} Excel dosyası okunamadı. ({str(e)})")
         
-        # Scan PDF files in the directory
         pdf_files = []
         if pdf_dir and os.path.exists(pdf_dir):
             try:
@@ -376,25 +336,19 @@ def load_all_circulars():
             except Exception:
                 pass
         
-        # Build lookup from Excel
         excel_lookup = {}
         if excel_df is not None:
             for _, row in excel_df.iterrows():
                 fname = str(row.get('Filename', '')).strip()
                 if fname:
                     excel_lookup[fname.lower()] = row
-                    # Also index by url-decoded name
                     excel_lookup[urllib.parse.unquote(fname).lower()] = row
                     
-        # Track which excel rows were matched
         matched_excel_files = set()
         
-        # 1. Add all physical PDFs found in the folder
         for pdf_file in pdf_files:
             decoded_pdf = urllib.parse.unquote(pdf_file)
             matched_row = None
-            
-            # Try to match in excel
             for key in [pdf_file.lower(), decoded_pdf.lower()]:
                 if key in excel_lookup:
                     matched_row = excel_lookup[key]
@@ -415,12 +369,10 @@ def load_all_circulars():
                 rec['References'] = clean_cell_text(str(matched_row.get('References', '')))
                 rec['Summary_EN'] = clean_cell_text(str(matched_row.get('Summary_EN', '')))
                 rec['Summary_TR'] = clean_cell_text(str(matched_row.get('Summary_TR', '')))
-                
-                # If category is empty, classify dynamically
+                rec['Recommendations_TR'] = clean_cell_text(str(matched_row.get('Recommendations_TR', '')))
                 if not rec['Category']:
                     rec['Category'] = classify_category(rec)
             else:
-                # No Excel match: clean filename to title
                 cleaned_title = clean_filename_to_title(pdf_file)
                 rec['Category'] = classify_category_from_text(pdf_file + " " + cleaned_title)
                 rec['Subject_EN'] = cleaned_title
@@ -428,21 +380,19 @@ def load_all_circulars():
                 rec['References'] = "Belirtilmedi"
                 rec['Summary_EN'] = "PDF dosyası klasörde mevcut. Excel özet tablosunda bulunmamaktadır."
                 rec['Summary_TR'] = "PDF dosyası klasörde mevcut. Excel özet tablosunda bulunmamaktadır."
+                rec['Recommendations_TR'] = "1. İlgili genelgeyi gemideki sirküler klasörüne ekleyin. 2. Gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin."
                 
             all_records.append(rec)
             
-        # 2. Add Excel rows that DO NOT have physical PDF files (for completeness)
         if excel_df is not None:
             for _, row in excel_df.iterrows():
                 fname = str(row.get('Filename', '')).strip()
                 if not fname:
                     continue
-                
                 fname_lower = fname.lower()
                 decoded_fname_lower = urllib.parse.unquote(fname).lower()
                 
                 if fname_lower not in matched_excel_files and decoded_fname_lower not in matched_excel_files:
-                    # Excel row not matched to any physical PDF
                     rec = {
                         'Flag': flag_name,
                         'Filename': fname,
@@ -453,55 +403,41 @@ def load_all_circulars():
                         'Subject_TR': clean_cell_text(str(row.get('Subject_TR', ''))),
                         'References': clean_cell_text(str(row.get('References', ''))),
                         'Summary_EN': clean_cell_text(str(row.get('Summary_EN', ''))),
-                        'Summary_TR': clean_cell_text(str(row.get('Summary_TR', '')))
+                        'Summary_TR': clean_cell_text(str(row.get('Summary_TR', ''))),
+                        'Recommendations_TR': clean_cell_text(str(row.get('Recommendations_TR', '')))
                     }
                     if not rec['Category']:
                         rec['Category'] = classify_category(rec)
-                        
                     all_records.append(rec)
                     
     if not all_records:
-        return pd.DataFrame(columns=['Filename', 'Category', 'Subject_EN', 'Subject_TR', 'References', 'Summary_EN', 'Summary_TR', 'Flag', 'Excel_Path', 'PDF_Dir'])
-        
+        return pd.DataFrame(columns=['Filename', 'Category', 'Subject_EN', 'Subject_TR', 'References', 'Summary_EN', 'Summary_TR', 'Recommendations_TR', 'Flag', 'Excel_Path', 'PDF_Dir'])
     df = pd.DataFrame(all_records)
     df = df.fillna("")
-    
     return df
 
-
-
-# Helper function to find a PDF file on the disk (supports URL-decoding and recursive checks)
+# Helper to locate PDF file
 def get_pdf_file_path(row):
     pdf_dir = row['PDF_Dir']
     filename = row['Filename']
-    
     if not filename:
         return None
-        
-    # 1. Direct match
     path1 = os.path.join(pdf_dir, filename)
     if os.path.exists(path1):
         return path1
-        
-    # 2. URL Decoded match (e.g. MC%203%20(Rev.15).pdf -> MC 3 (Rev.15).pdf)
     decoded_filename = urllib.parse.unquote(filename)
     path2 = os.path.join(pdf_dir, decoded_filename)
     if os.path.exists(path2):
         return path2
-        
-    # 3. Recursive directory search (case insensitive)
     if os.path.exists(pdf_dir):
         for root, dirs, files in os.walk(pdf_dir):
             for f in files:
                 if f.lower() == filename.lower() or f.lower() == decoded_filename.lower():
                     return os.path.join(root, f)
-                    
     return None
 
-# Load unified dataset
 df_circulars = load_all_circulars()
 
-# Curriculum database of flag guidelines & statutory checklists
 FLAG_GUIDES = {
     'Panama': {
         'portal_url': 'https://www.amp.gob.pa/normatividad/page/73/',
@@ -603,12 +539,12 @@ FLAG_GUIDES = {
                 "**SSAS Yapılandırması**: SSAS alarm sisteminin teknik departmana doğrudan uyarı vermesi sağlanmalıdır."
             ],
             'MLC (Denizcilik Çalışma Sözleşmesi)': [
-                "**MLC Değişiklikleri ve Sorumluluklar**: MARCIR-03-2023 uyarınca, gemi sahibinin denizcilerin terk edilmesi, sakatlanması veya ölümü durumunda mali güvence sağlamakla yükümlü olduğu poliçeler doğrulanmalıdır.",
-                "**Mutfak ve Aşçı Kuralları**: Gemide 10 veya daha fazla mürettebat varsa, ehil ve sertifikalı bir gemi aşçısı bulundurulması zorunludur. Yiyecek ve içme suyu mürettebata tamamen ücretsiz sağlanmalıdır."
+                "**MLC Değişiklikleri ve Sorumluluklar**: MARCIR-03-2023 uyarınca, gemi sahibinin seafarer terk edilmesi, sakatlanması veya ölümü durumunda mali güvence sağlayan sigorta poliçelerini kontrol edin.",
+                "**Mutfak ve Aşçı Kuralları**: Gemide 10 veya daha fazla personel varsa, onaylı aşçı sertifikası aranmalıdır. Gıda ve içme suyu ücretsiz sağlanmalıdır."
             ],
             'Statüter Sörveyler & Ekipmanlar': [
-                "**Belge Listesi Kontrolü**: Gemide bulunması gereken statüter sertifikalar ve güncel kılavuzların listesi MARCIR-06-2022 genelgesine göre kontrol edilmelidir.",
-                "**P&I ve Sigorta Limitleri**: Nairobi Enkaz Kaldırma ve Bunker CLC sigortalarının geçerli poliçe limitleri ve geçerliliği kontrol edilmelidir."
+                "**Belge Listesi Kontrolü**: Gemide bulunması gereken statüter sertifikalar ve kılavuzların güncel listesi MARCIR-06-2022 genelgesine göre kontrol edilmelidir.",
+                "**P&I ve Sigorta Limitleri**: Nairobi Enkaz Kaldırma ve Bunker CLC sigortalarının geçerli poliçe limitleri kontrol edilmelidir."
             ]
         }
     },
@@ -667,8 +603,8 @@ FLAG_GUIDES = {
     }
 }
 
-# SIDEBAR FILTERS
-st.sidebar.markdown(f'<h2 style="color:#00f2fe;font-size:1.4rem;margin-bottom:15px;font-weight:600;">🔍 Filtre Paneli</h2>', unsafe_allow_html=True)
+# SIDEBAR FILTERS (Clean Light Design)
+st.sidebar.markdown(f'<h2 style="color:#0369a1;font-size:1.4rem;margin-bottom:15px;font-weight:600;">🔍 Filtre Paneli</h2>', unsafe_allow_html=True)
 
 # Page Navigation
 page = st.sidebar.radio(
@@ -678,13 +614,12 @@ page = st.sidebar.radio(
 
 # Shared Filters in Sidebar
 st.sidebar.markdown("---")
-st.sidebar.markdown('<p style="color:#8b949e;font-size:0.85rem;font-weight:600;text-transform:uppercase;">Veri Filtreleri</p>', unsafe_allow_html=True)
+st.sidebar.markdown('<p style="color:#64748b;font-size:0.85rem;font-weight:600;text-transform:uppercase;">Veri Filtreleri</p>', unsafe_allow_html=True)
 
 if not df_circulars.empty:
     all_flags = ["Tümü"] + sorted(list(df_circulars['Flag'].unique()))
     selected_flag = st.sidebar.selectbox("Bayrak Devleti", all_flags)
     
-    # Extract unique categories
     unique_cats = set()
     for cat_str in df_circulars['Category'].dropna().unique():
         for c in str(cat_str).split(","):
@@ -704,16 +639,16 @@ else:
 st.sidebar.markdown("---")
 if st.sidebar.button("🔄 Verileri Yenile (Clear Cache)"):
     st.cache_data.clear()
-    st.sidebar.success("Önbellek temizlendi! Sayfayı yenileyebilirsiniz.")
+    st.sidebar.success("Önbellek temizlendi!")
 st.sidebar.markdown(
-    '<p style="color:#8b949e;font-size:0.8rem;text-align:center;">🚢 PHRS Vessel Survey Portal v1.0.0<br>© 2026 Phoenix Register of Shipping</p>', 
+    '<p style="color:#64748b;font-size:0.8rem;text-align:center;">🚢 PHRS Vessel Survey Portal v1.0.0<br>© 2026 Phoenix Register of Shipping</p>', 
     unsafe_allow_html=True
 )
 
 # PAGE 1: DASHBOARD & CIRCULARS SEARCH
 if page == "📊 Dashboard & Arama":
     st.markdown('<h1 class="gradient-text gradient-header">🚢 PHRS Bayrak Sirkülerleri Portalı</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#8b949e;font-size:1.1rem;margin-bottom:20px;">Yetkili bayrak devletlerinin sirküler analiz tablosu, arama motoru ve statutory gereklilik kütüphanesi.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b;font-size:1.1rem;margin-bottom:20px;">PHRS yetki kapsamındaki bayrak devletlerinin sirküler analiz tablosu, tavsiyeler ve statutory rehberlik veritabanı.</p>', unsafe_allow_html=True)
     
     if df_circulars.empty:
         st.error("❌ Veri tabanında sirküler kaydı bulunamadı! Lütfen Excel dosyalarının belirtilen klasörlerde mevcut olduğundan emin olun.")
@@ -721,13 +656,10 @@ if page == "📊 Dashboard & Arama":
         
     # Apply Filtering
     filtered_df = df_circulars.copy()
-    
     if selected_flag != "Tümü":
         filtered_df = filtered_df[filtered_df['Flag'] == selected_flag]
-        
     if selected_cat != "Tümü":
         filtered_df = filtered_df[filtered_df['Category'].apply(lambda x: selected_cat.lower() in str(x).lower())]
-        
     if search_query:
         query = search_query.lower()
         filtered_df = filtered_df[
@@ -736,14 +668,14 @@ if page == "📊 Dashboard & Arama":
             filtered_df['Subject_TR'].str.lower().str.contains(query) |
             filtered_df['References'].str.lower().str.contains(query) |
             filtered_df['Summary_EN'].str.lower().str.contains(query) |
-            filtered_df['Summary_TR'].str.lower().str.contains(query)
+            filtered_df['Summary_TR'].str.lower().str.contains(query) |
+            filtered_df['Recommendations_TR'].str.lower().str.contains(query)
         ]
         
     # KPI metrics row
     total_circs = len(df_circulars)
     filtered_circs_count = len(filtered_df)
     
-    # Calculate categories count
     ism_count = len(df_circulars[df_circulars['Category'].apply(lambda x: 'ism' in str(x).lower() or 'smc' in str(x).lower())])
     mlc_count = len(df_circulars[df_circulars['Category'].apply(lambda x: 'mlc' in str(x).lower())])
     isps_count = len(df_circulars[df_circulars['Category'].apply(lambda x: 'isps' in str(x).lower() or 'issc' in str(x).lower())])
@@ -756,144 +688,157 @@ if page == "📊 Dashboard & Arama":
             <div class="metric-lbl">Toplam Sirküler</div>
         </div>
         <div class="metric-box">
-            <div class="metric-val" style="color: #4facfe;">{filtered_circs_count}</div>
+            <div class="metric-val" style="color: #0284c7;">{filtered_circs_count}</div>
             <div class="metric-lbl">Filtrelenmiş</div>
         </div>
         <div class="metric-box">
-            <div class="metric-val" style="color: #ff54b0;">{ism_count}</div>
+            <div class="metric-val" style="color: #db2777;">{ism_count}</div>
             <div class="metric-lbl">ISM / SMC</div>
         </div>
         <div class="metric-box">
-            <div class="metric-val" style="color: #a23b72;">{isps_count}</div>
+            <div class="metric-val" style="color: #7c3aed;">{isps_count}</div>
             <div class="metric-lbl">ISPS / ISSC</div>
         </div>
         <div class="metric-box">
-            <div class="metric-val" style="color: #00f2fe;">{mlc_count}</div>
+            <div class="metric-val" style="color: #0891b2;">{mlc_count}</div>
             <div class="metric-lbl">MLC 2006</div>
         </div>
         <div class="metric-box">
-            <div class="metric-val" style="color: #2e86ab;">{stat_count}</div>
+            <div class="metric-val" style="color: #059669;">{stat_count}</div>
             <div class="metric-lbl">Statüter / Ekipman</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Show circulars list
     st.markdown('<h3 class="gradient-subheader" style="margin-top:0;">🔍 Arama Sonuçları</h3>', unsafe_allow_html=True)
     
     if filtered_df.empty:
-        st.info("ℹ️ Kriterlere uyan sirküler bulunamadı. Lütfen filtreleri veya arama kelimesini değiştirin.")
+        st.info("ℹ[] Kriterlere uyan sirküler bulunamadı. Lütfen filtreleri veya arama kelimesini değiştirin.")
     else:
-        # Pagination for main search
-        items_per_page = 20
-        total_pages = max(1, (filtered_circs_count + items_per_page - 1) // items_per_page)
+        # Show interactive search table
+        st.dataframe(
+            filtered_df[['Flag', 'Category', 'Subject_TR', 'References', 'Filename']],
+            use_container_width=True,
+            column_config={
+                "Flag": st.column_config.TextColumn("Bayrak"),
+                "Category": st.column_config.TextColumn("Kategori"),
+                "Subject_TR": st.column_config.TextColumn("Konu (Türkçe)"),
+                "References": st.column_config.TextColumn("Kural Dayanağı"),
+                "Filename": st.column_config.TextColumn("Dosya Adı")
+            }
+        )
         
-        current_page = 1
-        if total_pages > 1:
-            import hashlib
-            filter_str = f"{selected_flag}_{selected_cat}_{search_query}"
-            main_page_hash = hashlib.md5(filter_str.encode('utf-8')).hexdigest()[:8]
-            page_key = f"page_main_{main_page_hash}"
+        st.markdown("---")
+        st.markdown('<h3 class="gradient-subheader">📄 Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h3>', unsafe_allow_html=True)
+        
+        doc_options = filtered_df['Filename'].tolist()
+        def get_option_label(fname):
+            rows = filtered_df[filtered_df['Filename'] == fname]
+            if not rows.empty:
+                flag = rows.iloc[0]['Flag']
+                subj = rows.iloc[0]['Subject_TR']
+                return f"[{flag}] {subj if subj else fname}"
+            return fname
             
-            col_space, col_select = st.columns([6, 4])
-            with col_select:
-                current_page = st.selectbox(
-                    "Sayfa Seçin",
-                    options=list(range(1, total_pages + 1)),
-                    index=0,
-                    key=page_key,
-                    format_func=lambda x: f"Sayfa {x} / {total_pages}"
-                )
+        selected_fname = st.selectbox(
+            "Detaylarını görmek, tavsiyeleri okumak ve indirmek istediğiniz sirküleri seçin:",
+            options=doc_options,
+            format_func=get_option_label,
+            key="selected_doc_details"
+        )
         
-        m_start = (current_page - 1) * items_per_page
-        m_end = min(m_start + items_per_page, filtered_circs_count)
-        
-        st.markdown(f"<p style='color: #64748b; font-size: 0.9rem;'>Toplam {filtered_circs_count} sonuçtan {m_start + 1} - {m_end} arası gösteriliyor</p>", unsafe_allow_html=True)
-        
-        paginated_df = filtered_df.iloc[m_start:m_end]
-        
-        # We display the data using cards
-        for idx, row in paginated_df.iterrows():
-            pdf_file_path = get_pdf_file_path(row)
+        if selected_fname:
+            selected_row = filtered_df[filtered_df['Filename'] == selected_fname].iloc[0]
+            pdf_file_path = get_pdf_file_path(selected_row)
             
             with st.container():
                 st.markdown(f"""
-                <div class="glass-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-size:1.1rem; font-weight:700; color:#0369a1;">{row['Subject_TR'] if row['Subject_TR'] else row['Subject_EN']}</span>
+                <div class="glass-card" style="border-left: 5px solid #0284c7; background: #ffffff;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-size:1.3rem; font-weight:700; color:#0369a1;">{selected_row['Subject_TR'] if selected_row['Subject_TR'] else selected_row['Subject_EN']}</span>
                         <div>
-                            <span class="badge badge-flag">{row['Flag']}</span>
-                            <span class="badge badge-cat">{row['Category']}</span>
+                            <span class="badge badge-flag" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Flag']}</span>
+                            <span class="badge badge-cat" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Category']}</span>
                         </div>
                     </div>
-                    <p style="margin-bottom:6px; font-size:0.85rem; color:#64748b;"><b>Dosya Adı:</b> {row['Filename']} | <b>Referanslar:</b> {row['References'] if row['References'] else 'Belirtilmedi'}</p>
-                    <hr style="border-color:#e2e8f0; margin:8px 0;"/>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; font-size:0.9rem;">
+                    <p style="margin-bottom:12px; font-size:0.9rem; color:#64748b;">
+                        <b>Dosya Adı:</b> {selected_row['Filename']} | 
+                        <b>Referanslar / Kural Dayanağı:</b> {selected_row['References'] if selected_row['References'] else 'Belirtilmedi'}
+                    </p>
+                    <hr style="border-color:#e2e8f0; margin:15px 0;"/>
+                    
+                    <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:25px; font-size:0.95rem;">
                         <div>
-                            <p style="color:#be185d; font-weight:600; margin-bottom:4px; font-size:0.8rem; text-transform:uppercase;">Özet (TÜRKÇE)</p>
-                            <p style="color:#334155; line-height:1.4;">{row['Summary_TR'] if row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
+                            <p style="color:#be185d; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Özet (TÜRKÇE)</p>
+                            <p style="color:#334155; line-height:1.5; margin-bottom:15px;">{selected_row['Summary_TR'] if selected_row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
+                            
+                            <p style="color:#0369a1; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Summary (ENGLISH)</p>
+                            <p style="color:#334155; line-height:1.5;">{selected_row['Summary_EN'] if selected_row['Summary_EN'] else 'No English summary available.'}</p>
                         </div>
-                        <div>
-                            <p style="color:#0369a1; font-weight:600; margin-bottom:4px; font-size:0.8rem; text-transform:uppercase;">Summary (ENGLISH)</p>
-                            <p style="color:#334155; line-height:1.4;">{row['Summary_EN'] if row['Summary_EN'] else 'No English summary available.'}</p>
+                        <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
+                            <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 YAPILMASI GEREKENLER / TAVSİYELER</p>
+                            <p style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
+                                {selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.')}
+                            </p>
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Render PDF actions inside st.container using native streamlit buttons
-                col1, col2, col3 = st.columns([2, 2, 8])
+                col1, col2, col3 = st.columns([3, 3, 6])
                 with col1:
                     if pdf_file_path:
                         try:
                             with open(pdf_file_path, "rb") as f:
                                 pdf_bytes = f.read()
                             st.download_button(
-                                label="📄 PDF İndir",
+                                label="📄 PDF Sirkülerini İndir",
                                 data=pdf_bytes,
-                                file_name=row['Filename'],
+                                file_name=selected_row['Filename'],
                                 mime="application/pdf",
-                                key=f"dl_{idx}"
+                                key="download_selected_pdf"
                             )
                         except Exception as e:
                             st.caption(f"⚠️ Dosya okunamadı: {str(e)}")
                     else:
-                        st.button("❌ PDF Bulunamadı", key=f"dl_err_{idx}", disabled=True)
+                        st.button("❌ PDF Bulunamadı", disabled=True, key="download_err_selected")
                 
                 with col2:
-                    # Link to flag website details if available
-                    flag_cfg = FLAG_GUIDES.get(row['Flag'])
+                    flag_cfg = FLAG_GUIDES.get(selected_row['Flag'])
                     if flag_cfg:
-                        st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank"><button style="padding:4px 12px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.85rem; height:38px; cursor:pointer;">🌐 Bayrak Sitesine Git</button></a>', unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
+                        st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank" style="text-decoration:none;"><button style="padding:4px 12px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.9rem; height:38px; cursor:pointer; width:100%;">🌐 Bayrak Resmi Sitesine Git</button></a>', unsafe_allow_html=True)
 
 # PAGE 2: FLAG GUIDES & CHECKLISTS
 elif page == "📋 Bayrak Kontrol Listeleri":
     st.markdown('<h1 class="gradient-text gradient-header">📋 Bayrak Bazlı Kontrol Listesi & Statutory Kriterleri</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#8b949e;font-size:1.1rem;margin-bottom:25px;">Statutory denetimler yaparken (ISM, MLC, ISPS, Statüter Ekipmanlar) bayraklara göre dikkat etmeniz gereken özel maddeler ve ek istekler.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b;font-size:1.1rem;margin-bottom:25px;">Statutory denetimler yaparken (ISM, MLC, ISPS, Statüter Ekipmanlar) bayraklara göre dikkat etmeniz gereken özel maddeler, tavsiyeler ve ek istekler.</p>', unsafe_allow_html=True)
     
-    # Selector for Flag Guide
     flags_with_guides = list(FLAG_GUIDES.keys())
     
-    # Sync with sidebar flag selection if available
-    default_idx = 0
-    if selected_flag in flags_with_guides:
-        default_idx = flags_with_guides.index(selected_flag)
-        
-    selected_guide_flag = st.selectbox(
-        "Detaylarını İncelemek İstediğiniz Bayrak Devleti:", 
-        flags_with_guides,
-        index=default_idx
-    )
-    
+    # Sync with unified sidebar selection or let select
+    if selected_flag == "Tümü":
+        selected_guide_flag = st.selectbox(
+            "Detaylarını İncelemek İstediğiniz Bayrak Devleti:", 
+            flags_with_guides,
+            index=0,
+            key="checklist_flag_selector"
+        )
+    else:
+        if selected_flag in flags_with_guides:
+            selected_guide_flag = selected_flag
+            st.info(f"ℹ️ Sol menüden seçilen **{selected_flag}** bayrağı rehberi görüntüleniyor.")
+        else:
+            selected_guide_flag = flags_with_guides[0]
+            st.warning(f"⚠️ Seçilen {selected_flag} için kılavuz kontrol listesi bulunmamaktadır. {selected_guide_flag} kılavuzu gösteriliyor.")
+            
     guide = FLAG_GUIDES[selected_guide_flag]
     
     # Flag Details Header Card
     st.markdown(f"""
-    <div class="glass-card" style="border-left: 4px solid #00f2fe;">
-        <h2 style="margin:0 0 5px 0; color:#00f2fe;">{selected_guide_flag} Bayrak Rehberi</h2>
-        <p style="margin-bottom:12px; font-size:1.05rem;">{guide['description']}</p>
-        <p style="margin:0; font-size:0.9rem; color:#8b949e;"> Resmi Circular Portalı: <a href="{guide['portal_url']}" target="_blank" style="color:#00f2fe;text-decoration:none;">{guide['portal_url']} ↗</a></p>
+    <div class="glass-card" style="border-left: 4px solid #0284c7; background: #ffffff;">
+        <h2 style="margin:0 0 5px 0; color:#0369a1;">{selected_guide_flag} Bayrak Rehberi</h2>
+        <p style="margin-bottom:12px; font-size:1.05rem; color:#334155;">{guide['description']}</p>
+        <p style="margin:0; font-size:0.9rem; color:#64748b;"> Resmi Circular Portalı: <a href="{guide['portal_url']}" target="_blank" style="color:#0284c7;text-decoration:none;font-weight:600;">{guide['portal_url']} ↗</a></p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -904,10 +849,10 @@ elif page == "📋 Bayrak Kontrol Listeleri":
     for i, contact in enumerate(guide['contacts']):
         with cols[i]:
             st.markdown(f"""
-            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:15px; height:100%;">
-                <p style="margin:0 0 4px 0; font-weight:700; color:#ff54b0; font-size:0.95rem;">{contact['name']}</p>
-                <p style="margin:0 0 8px 0; font-size:0.85rem; color:#8b949e; font-style:italic;">{contact['purpose']}</p>
-                <p style="margin:0; font-size:0.9rem; font-weight:600; color:#00f2fe;">✉️ {contact['email']}</p>
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:15px; height:100%; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <p style="margin:0 0 4px 0; font-weight:700; color:#be185d; font-size:0.95rem;">{contact['name']}</p>
+                <p style="margin:0 0 8px 0; font-size:0.85rem; color:#64748b; font-style:italic;">{contact['purpose']}</p>
+                <p style="margin:0; font-size:0.9rem; font-weight:600; color:#0284c7;">✉️ {contact['email']}</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -917,7 +862,6 @@ elif page == "📋 Bayrak Kontrol Listeleri":
     st.markdown('<h3 class="gradient-subheader">📝 Sörvey Kontrol Maddeleri (Surveyor Checklists)</h3>', unsafe_allow_html=True)
     
     checklists = guide['checklists']
-    
     tab_names = list(checklists.keys())
     tabs = st.tabs(tab_names)
     
@@ -928,12 +872,11 @@ elif page == "📋 Bayrak Kontrol Listeleri":
             
             for item in items:
                 st.markdown(f"""
-                <div style="background:rgba(0,0,0,0.02); border-left:3px solid #be185d; border-radius:0 6px 6px 0; padding:12px; margin-bottom:10px; font-size:0.95rem; line-height:1.4; color:#334155;">
+                <div style="background:#ffffff; border-left:3px solid #be185d; border-radius:0 6px 6px 0; padding:12px; margin-bottom:10px; font-size:0.95rem; line-height:1.4; color:#334155; border-top:1px solid #f1f5f9; border-right:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,0.01);">
                     {item}
                 </div>
                 """, unsafe_allow_html=True)
                 
-            # Filter circulars for this flag and category
             tab_lower = name.lower()
             if 'ism' in tab_lower or 'smc' in tab_lower:
                 cat_mask = df_circulars['Category'].apply(lambda x: 'ism' in str(x).lower() or 'smc' in str(x).lower())
@@ -951,9 +894,8 @@ elif page == "📋 Bayrak Kontrol Listeleri":
             st.markdown("<hr style='border-color:#e2e8f0; margin:15px 0;'/>", unsafe_allow_html=True)
             st.markdown(f"<h4 style='color:#0369a1; font-size:1.1rem; margin-bottom:10px;'>📂 İlgili Kategorideki Sirkülerler ({len(tab_circs)} Adet)</h4>", unsafe_allow_html=True)
             
-            # Sub-search inside this tab
             tab_search_key = f"search_tab_{selected_guide_flag}_{name.replace(' ', '_').replace('/', '_')}"
-            tab_search = st.text_input("Bu kategorideki sirkülerlerde ara (Dosya, konu veya özet):", "", key=tab_search_key)
+            tab_search = st.text_input("Bu kategorideki sirkülerlerde ara (Dosya, konu, özet veya tavsiye):", "", key=tab_search_key)
             
             if tab_search:
                 q = tab_search.lower()
@@ -963,17 +905,16 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                     tab_circs['Subject_TR'].str.lower().str.contains(q) |
                     tab_circs['References'].str.lower().str.contains(q) |
                     tab_circs['Summary_EN'].str.lower().str.contains(q) |
-                    tab_circs['Summary_TR'].str.lower().str.contains(q)
+                    tab_circs['Summary_TR'].str.lower().str.contains(q) |
+                    tab_circs['Recommendations_TR'].str.lower().str.contains(q)
                 ]
                 
             if tab_circs.empty:
                 st.info("Bu kriterlere uyan sirküler bulunamadı.")
             else:
-                # Paginate within tab
                 tab_items_per_page = 10
                 tab_total_pages = max(1, (len(tab_circs) + tab_items_per_page - 1) // tab_items_per_page)
                 
-                import hashlib
                 filter_str = f"{selected_guide_flag}_{name}_{tab_search}"
                 tab_page_hash = hashlib.md5(filter_str.encode('utf-8')).hexdigest()[:8]
                 tab_page_key = f"page_tab_{tab_page_hash}"
@@ -1000,28 +941,31 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                     pdf_file_path = get_pdf_file_path(row)
                     
                     st.markdown(f"""
-                    <div class="glass-card" style="margin-bottom: 10px; padding: 15px; border-left: 3px solid #0284c7;">
+                    <div class="glass-card" style="margin-bottom: 15px; padding: 15px; border-left: 3px solid #0284c7; background: #ffffff;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <span style="font-size:1rem; font-weight:600; color:#0369a1;">{row['Subject_TR'] if row['Subject_TR'] else row['Subject_EN']}</span>
+                            <span style="font-size:1.05rem; font-weight:700; color:#0369a1;">{row['Subject_TR'] if row['Subject_TR'] else row['Subject_EN']}</span>
                             <span class="badge badge-cat" style="font-size:0.7rem;">{row['Category']}</span>
                         </div>
                         <p style="margin-bottom:6px; font-size:0.8rem; color:#64748b;"><b>Dosya:</b> {row['Filename']} | <b>Referans:</b> {row['References'] if row['References'] else 'Belirtilmedi'}</p>
                         <hr style="border-color:#e2e8f0; margin:6px 0;"/>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; font-size:0.8rem;">
+                        <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:15px; font-size:0.85rem;">
                             <div>
-                                <p style="color:#be185d; font-weight:600; margin-bottom:2px; font-size:0.75rem;">ÖZET (TÜRKÇE)</p>
-                                <p style="color:#334155; line-height:1.3;">{row['Summary_TR'] if row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
+                                <p style="color:#be185d; font-weight:700; margin-bottom:2px; font-size:0.75rem;">ÖZET (TÜRKÇE)</p>
+                                <p style="color:#334155; line-height:1.4;">{row['Summary_TR'] if row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
                             </div>
                             <div>
-                                <p style="color:#0369a1; font-weight:600; margin-bottom:2px; font-size:0.75rem;">SUMMARY (ENGLISH)</p>
-                                <p style="color:#334155; line-height:1.3;">{row['Summary_EN'] if row['Summary_EN'] else 'No English summary available.'}</p>
+                                <p style="color:#0369a1; font-weight:700; margin-bottom:2px; font-size:0.75rem;">SUMMARY (ENGLISH)</p>
+                                <p style="color:#334155; line-height:1.4;">{row['Summary_EN'] if row['Summary_EN'] else 'No English summary available.'}</p>
+                            </div>
+                            <div style="background-color:#f0f9ff; border:1px solid #bae6fd; border-radius:4px; padding:10px;">
+                                <p style="color:#0369a1; font-weight:700; margin-bottom:4px; font-size:0.75rem;">📋 TAVSİYELER / NE YAPILMALI</p>
+                                <p style="color:#1e293b; line-height:1.4; font-weight:500;">{row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin.')}</p>
                             </div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Native Streamlit buttons for download/go to site
-                    col_dl, col_site, col_empty = st.columns([2, 2, 6])
+                    col_dl, col_site, col_empty = st.columns([2.5, 2.5, 7])
                     with col_dl:
                         if pdf_file_path:
                             try:
@@ -1041,10 +985,9 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                     with col_site:
                         flag_cfg = FLAG_GUIDES.get(row['Flag'])
                         if flag_cfg:
-                            st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank"><button style="padding:4px 10px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.8rem; height:35px; cursor:pointer;">🌐 Bayrak Sitesine Git</button></a>', unsafe_allow_html=True)
+                            st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank" style="text-decoration:none;"><button style="padding:4px 10px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.8rem; height:35px; cursor:pointer; width:100%;">🌐 Bayrak Sitesine Git</button></a>', unsafe_allow_html=True)
                     st.markdown("<div style='margin-bottom:15px;'></div>", unsafe_allow_html=True)
                 
-    # Relevant circulars from database for this flag
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(f'<h3 class="gradient-subheader">📂 {selected_guide_flag} Bayrağına Ait Tüm Sirkülerler</h3>', unsafe_allow_html=True)
     
@@ -1066,7 +1009,7 @@ elif page == "📋 Bayrak Kontrol Listeleri":
 # PAGE 3: FLAG OFFICIAL WEBSITES
 elif page == "🌐 Canlı Bayrak Siteleri":
     st.markdown('<h1 class="gradient-text gradient-header">🌐 Canlı Bayrak Devletleri Sirküler Portalları</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#8b949e;font-size:1.1rem;margin-bottom:20px;">En güncel sirküler, form ve mevzuat değişikliklerini teyit etmek için bayrakların resmi web sitelerini ziyaret edebilirsiniz.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b;font-size:1.1rem;margin-bottom:20px;">En güncel sirküler, form ve mevzuat değişikliklerini teyit etmek için bayrakların resmi web sitelerini ziyaret edebilirsiniz.</p>', unsafe_allow_html=True)
     
     portals = {
         'Panama': {
@@ -1103,12 +1046,12 @@ elif page == "🌐 Canlı Bayrak Siteleri":
     
     for flag_name, info in portals.items():
         st.markdown(f"""
-        <div class="glass-card">
+        <div class="glass-card" style="background:#ffffff;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0; color:#00f2fe;">{flag_name}</h3>
-                <a href="{info['url']}" target="_blank" style="background:#00f2fe; color:#0e1117; padding:6px 16px; border-radius:4px; font-weight:700; text-decoration:none; font-size:0.9rem;">Sitede Aç ↗</a>
+                <h3 style="margin:0; color:#0369a1;">{flag_name}</h3>
+                <a href="{info['url']}" target="_blank" style="background:#0284c7; color:#ffffff; padding:6px 16px; border-radius:4px; font-weight:700; text-decoration:none; font-size:0.9rem; box-shadow:0 2px 4px rgba(2,132,199,0.2);">Sitede Aç ↗</a>
             </div>
-            <p style="margin:10px 0 5px 0; font-weight:600; color:#e2e8f0;">{info['name']}</p>
-            <p style="margin:0; color:#8b949e; font-size:0.9rem;">{info['desc']}</p>
+            <p style="margin:10px 0 5px 0; font-weight:600; color:#1e293b;">{info['name']}</p>
+            <p style="margin:0; color:#64748b; font-size:0.9rem;">{info['desc']}</p>
         </div>
         """, unsafe_allow_html=True)
