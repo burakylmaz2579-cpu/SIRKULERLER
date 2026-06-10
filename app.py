@@ -702,6 +702,9 @@ else:
 
 # Sidebar Footer
 st.sidebar.markdown("---")
+if st.sidebar.button("🔄 Verileri Yenile (Clear Cache)"):
+    st.cache_data.clear()
+    st.sidebar.success("Önbellek temizlendi! Sayfayı yenileyebilirsiniz.")
 st.sidebar.markdown(
     '<p style="color:#8b949e;font-size:0.8rem;text-align:center;">🚢 PHRS Vessel Survey Portal v1.0.0<br>© 2026 Phoenix Register of Shipping</p>', 
     unsafe_allow_html=True
@@ -871,7 +874,17 @@ elif page == "📋 Bayrak Kontrol Listeleri":
     
     # Selector for Flag Guide
     flags_with_guides = list(FLAG_GUIDES.keys())
-    selected_guide_flag = st.selectbox("Detaylarını İncelemek İstediğiniz Bayrak Devleti:", flags_with_guides)
+    
+    # Sync with sidebar flag selection if available
+    default_idx = 0
+    if selected_flag in flags_with_guides:
+        default_idx = flags_with_guides.index(selected_flag)
+        
+    selected_guide_flag = st.selectbox(
+        "Detaylarını İncelemek İstediğiniz Bayrak Devleti:", 
+        flags_with_guides,
+        index=default_idx
+    )
     
     guide = FLAG_GUIDES[selected_guide_flag]
     
