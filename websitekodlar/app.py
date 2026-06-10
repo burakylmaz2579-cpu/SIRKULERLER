@@ -253,6 +253,46 @@ def normalize_columns(df):
     df = df.rename(columns=mapping)
     return df
 
+# Clean filename to a readable title
+def clean_filename_to_title(filename):
+    title = filename
+    if title.lower().endswith('.pdf'):
+        title = title[:-4]
+    
+    # URL Decode
+    title = urllib.parse.unquote(title)
+    
+    # Replace dashes and underscores with spaces
+    title = title.replace('-', ' ').replace('_', ' ')
+    
+    # Clean up double spaces
+    import re
+    title = re.sub(r'\s+', ' ', title).strip()
+    
+    # Capitalize
+    title = title.title()
+    
+    return title
+
+# Classify category dynamically from a text query (e.g. filename)
+def classify_category_from_text(text):
+    combined = text.lower()
+    categories = []
+    if any(k in combined for k in ["ism", "safety management", "dpa", "smc", "safety auditing", "audit", "doc "]):
+        categories.append("SMC / ISM")
+    if any(k in combined for k in ["isps", "security", "ssas", "cso", "piracy", "issc"]):
+        categories.append("ISSC / ISPS")
+    if any(k in combined for k in ["mlc", "maritime labour", "dmlc", "seafarer", "crew", "cook", "rest hours", "repatriation", "medical"]):
+        categories.append("MLC")
+    if any(k in combined for k in ["lifeboat", "lsa", "thickness", "ballast water", "bwm", "marpol", "solas", "dispensation", "exemption", "equipment", "fire", "co2", "radio"]):
+        categories.append("Statüter / Donanım")
+    if any(k in combined for k in ["recognized organization", "ro authorization", "surveyor", "class society"]):
+        categories.append("Klas / RO Yetkileri")
+        
+    if not categories:
+        return "Genel / Diğer"
+    return ", ".join(categories)
+
 # Dynamic Path Resolver to handle Windows encoding issues in directory names
 # and support both local and Streamlit Cloud layouts (where app.py is in repo root or subfolder)
 def resolve_path(prefix, subpath=""):
@@ -299,7 +339,7 @@ def resolve_path(prefix, subpath=""):
     # Default fallback
     return os.path.join(base_dir, '..', prefix)
 
-# Data Loader
+# Data Loader (PDF-first parser with Excel support)
 @st.cache_data
 def load_all_circulars():
     configs = {
@@ -311,52 +351,124 @@ def load_all_circulars():
         'Sierra Leone': ('SIERRA', 'Sirkuler_PDFleri/SLMARAD_Sirkuler_Analizi_Turkce.xlsx', 'Sirkuler_PDFleri')
     }
     
-    all_dfs = []
+    all_records = []
     
     for flag_name, (prefix, excel_subpath, pdf_subpath) in configs.items():
         excel_path = resolve_path(prefix, excel_subpath)
         pdf_dir = resolve_path(prefix, pdf_subpath)
         
+        excel_df = None
         if excel_path and os.path.exists(excel_path):
             try:
-                df = pd.read_excel(excel_path)
-                df = normalize_columns(df)
-                df['Flag'] = flag_name
-                df['Excel_Path'] = excel_path
-                df['PDF_Dir'] = pdf_dir
-                all_dfs.append(df)
+                excel_df = pd.read_excel(excel_path)
+                excel_df = normalize_columns(excel_df)
+                excel_df = excel_df.fillna("")
             except Exception as e:
-                st.warning(f"⚠️ Hata: {flag_name} Excel dosyası yüklenemedi. ({str(e)})")
-        else:
-            st.info(f"ℹ️ Bilgi: {flag_name} Excel dosyası yerelde bulunamadı ({excel_path}).")
+                st.warning(f"⚠️ Hata: {flag_name} Excel dosyası okunamadı. ({str(e)})")
+        
+        # Scan PDF files in the directory
+        pdf_files = []
+        if pdf_dir and os.path.exists(pdf_dir):
+            try:
+                for root, dirs, files in os.walk(pdf_dir):
+                    for f in files:
+                        if f.lower().endswith('.pdf'):
+                            pdf_files.append(f)
+            except Exception:
+                pass
+        
+        # Build lookup from Excel
+        excel_lookup = {}
+        if excel_df is not None:
+            for _, row in excel_df.iterrows():
+                fname = str(row.get('Filename', '')).strip()
+                if fname:
+                    excel_lookup[fname.lower()] = row
+                    # Also index by url-decoded name
+                    excel_lookup[urllib.parse.unquote(fname).lower()] = row
+                    
+        # Track which excel rows were matched
+        matched_excel_files = set()
+        
+        # 1. Add all physical PDFs found in the folder
+        for pdf_file in pdf_files:
+            decoded_pdf = urllib.parse.unquote(pdf_file)
+            matched_row = None
             
-    if not all_dfs:
+            # Try to match in excel
+            for key in [pdf_file.lower(), decoded_pdf.lower()]:
+                if key in excel_lookup:
+                    matched_row = excel_lookup[key]
+                    matched_excel_files.add(key)
+                    break
+            
+            rec = {
+                'Flag': flag_name,
+                'Filename': pdf_file,
+                'Excel_Path': excel_path if excel_path else "",
+                'PDF_Dir': pdf_dir if pdf_dir else ""
+            }
+            
+            if matched_row is not None:
+                rec['Category'] = clean_cell_text(str(matched_row.get('Category', ''))).strip()
+                rec['Subject_EN'] = clean_cell_text(str(matched_row.get('Subject_EN', '')))
+                rec['Subject_TR'] = clean_cell_text(str(matched_row.get('Subject_TR', '')))
+                rec['References'] = clean_cell_text(str(matched_row.get('References', '')))
+                rec['Summary_EN'] = clean_cell_text(str(matched_row.get('Summary_EN', '')))
+                rec['Summary_TR'] = clean_cell_text(str(matched_row.get('Summary_TR', '')))
+                
+                # If category is empty, classify dynamically
+                if not rec['Category']:
+                    rec['Category'] = classify_category(rec)
+            else:
+                # No Excel match: clean filename to title
+                cleaned_title = clean_filename_to_title(pdf_file)
+                rec['Category'] = classify_category_from_text(pdf_file + " " + cleaned_title)
+                rec['Subject_EN'] = cleaned_title
+                rec['Subject_TR'] = cleaned_title
+                rec['References'] = "Belirtilmedi"
+                rec['Summary_EN'] = "PDF dosyası klasörde mevcut. Excel özet tablosunda bulunmamaktadır."
+                rec['Summary_TR'] = "PDF dosyası klasörde mevcut. Excel özet tablosunda bulunmamaktadır."
+                
+            all_records.append(rec)
+            
+        # 2. Add Excel rows that DO NOT have physical PDF files (for completeness)
+        if excel_df is not None:
+            for _, row in excel_df.iterrows():
+                fname = str(row.get('Filename', '')).strip()
+                if not fname:
+                    continue
+                
+                fname_lower = fname.lower()
+                decoded_fname_lower = urllib.parse.unquote(fname).lower()
+                
+                if fname_lower not in matched_excel_files and decoded_fname_lower not in matched_excel_files:
+                    # Excel row not matched to any physical PDF
+                    rec = {
+                        'Flag': flag_name,
+                        'Filename': fname,
+                        'Excel_Path': excel_path if excel_path else "",
+                        'PDF_Dir': pdf_dir if pdf_dir else "",
+                        'Category': clean_cell_text(str(row.get('Category', ''))).strip(),
+                        'Subject_EN': clean_cell_text(str(row.get('Subject_EN', ''))),
+                        'Subject_TR': clean_cell_text(str(row.get('Subject_TR', ''))),
+                        'References': clean_cell_text(str(row.get('References', ''))),
+                        'Summary_EN': clean_cell_text(str(row.get('Summary_EN', ''))),
+                        'Summary_TR': clean_cell_text(str(row.get('Summary_TR', '')))
+                    }
+                    if not rec['Category']:
+                        rec['Category'] = classify_category(rec)
+                        
+                    all_records.append(rec)
+                    
+    if not all_records:
         return pd.DataFrame(columns=['Filename', 'Category', 'Subject_EN', 'Subject_TR', 'References', 'Summary_EN', 'Summary_TR', 'Flag', 'Excel_Path', 'PDF_Dir'])
         
-    merged_df = pd.concat(all_dfs, ignore_index=True)
+    df = pd.DataFrame(all_records)
+    df = df.fillna("")
     
-    # Standardize columns
-    for col in ['Filename', 'Category', 'Subject_EN', 'Subject_TR', 'References', 'Summary_EN', 'Summary_TR']:
-        if col not in merged_df.columns:
-            merged_df[col] = ""
-            
-    merged_df = merged_df.fillna("")
-    
-    # Apply text cleaning for UI layout
-    for col in ['Filename', 'Subject_EN', 'Subject_TR', 'References', 'Summary_EN', 'Summary_TR']:
-        merged_df[col] = merged_df[col].apply(clean_cell_text)
+    return df
 
-        
-    # Standardize Category
-    def standardize_category(row):
-        cat = str(row.get('Category', '')).strip()
-        if not cat:
-            return classify_category(row)
-        return clean_cell_text(cat)
-        
-    merged_df['Category'] = merged_df.apply(standardize_category, axis=1)
-    
-    return merged_df
 
 
 # Helper function to find a PDF file on the disk (supports URL-decoding and recursive checks)
