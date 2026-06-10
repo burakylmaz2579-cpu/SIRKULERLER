@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling (Glassmorphism & Sleek Dark Mode)
+# Custom Styling (Clean Light Maritime Theme)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
@@ -22,54 +22,58 @@ st.markdown("""
     
     /* Main container background */
     .stApp {
-        background-color: #0e1117;
-        color: #e2e8f0;
+        background-color: #f8fafc;
+        color: #0f172a;
     }
     
     /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background-color: #161b22;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        background-color: #0f172a;
+        border-right: 1px solid rgba(0, 0, 0, 0.05);
     }
     
-    /* Glassmorphism Cards */
+    /* Sidebar text colors */
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] div {
+        color: #f8fafc !important;
+    }
+    
+    /* Clean white cards with light borders and soft shadows */
     .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         padding: 20px;
         margin-bottom: 20px;
-        transition: all 0.3s ease-in-out;
+        transition: all 0.2s ease-in-out;
     }
     .glass-card:hover {
-        border-color: rgba(46, 134, 171, 0.5);
-        box-shadow: 0 8px 32px 0 rgba(46, 134, 171, 0.15);
-        transform: translateY(-2px);
+        border-color: #0284c7;
+        box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.08), 0 4px 6px -2px rgba(2, 132, 199, 0.04);
+        transform: translateY(-1px);
     }
     
-    /* Gradient Headers */
+    /* Headings */
     .gradient-text {
-        background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #0369a1;
         font-weight: 700;
     }
     
     .gradient-header {
         font-size: 2.2rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
         font-weight: 700;
+        color: #0f172a;
     }
     
     .gradient-subheader {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         margin-top: 1.5rem;
         margin-bottom: 0.8rem;
         font-weight: 600;
-        color: #00f2fe;
+        color: #0369a1;
     }
 
     /* Metric container */
@@ -82,26 +86,27 @@ st.markdown("""
     .metric-box {
         flex: 1;
         min-width: 150px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 8px;
         padding: 15px;
         text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
         transition: all 0.2s;
     }
     .metric-box:hover {
-        background: rgba(79, 172, 254, 0.05);
-        border-color: rgba(79, 172, 254, 0.2);
+        background: #f0f9ff;
+        border-color: #bae6fd;
     }
     .metric-val {
         font-size: 1.8rem;
         font-weight: 700;
-        color: #00f2fe;
+        color: #0284c7;
         margin-bottom: 5px;
     }
     .metric-lbl {
         font-size: 0.85rem;
-        color: #8b949e;
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -117,30 +122,30 @@ st.markdown("""
         margin-bottom: 5px;
         text-transform: uppercase;
     }
-    .badge-flag { background: rgba(79, 172, 254, 0.15); color: #00f2fe; border: 1px solid rgba(79, 172, 254, 0.3); }
-    .badge-cat { background: rgba(162, 59, 114, 0.15); color: #ff54b0; border: 1px solid rgba(162, 59, 114, 0.3); }
+    .badge-flag { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-cat { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
 
     /* Tables styles */
     .dataframe {
         border-collapse: collapse;
         width: 100%;
-        color: #e2e8f0;
+        color: #0f172a;
         font-size: 0.9rem;
     }
     .dataframe th {
-        background-color: #1f242d;
-        color: #00f2fe;
+        background-color: #f1f5f9;
+        color: #0f172a;
         font-weight: 600;
         text-align: left;
         padding: 12px;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 2px solid #e2e8f0;
     }
     .dataframe td {
         padding: 10px 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid #e2e8f0;
     }
     .dataframe tr:hover {
-        background-color: rgba(255, 255, 255, 0.02);
+        background-color: #f8fafc;
     }
     
     /* Scrollbar */
@@ -149,14 +154,14 @@ st.markdown("""
         height: 8px;
     }
     ::-webkit-scrollbar-track {
-        background: #0e1117;
+        background: #f8fafc;
     }
     ::-webkit-scrollbar-thumb {
-        background: #30363d;
+        background: #cbd5e1;
         border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: #8b949e;
+        background: #94a3b8;
     }
 </style>
 """, unsafe_allow_html=True)
