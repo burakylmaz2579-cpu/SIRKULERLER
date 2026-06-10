@@ -1,0 +1,1166 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href="/_content/Kentico.Content.Web.Rcl/Content/Bundles/Public/systemPageComponents.min.css" rel="stylesheet" />
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found</title>
+    <link rel="canonical" href="https://www.liscr.com/page-not-found" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/ico" sizes="16x16" href="/LISCR/media/Resources/Pages/header/fav_icon.png">
+
+    <!-- AP: Integration Start -->
+    <!-- AutoPilot Integration - Start - https://www.liscr.com/page-not-found -->
+
+<!-- be_ixf, sdk, gho-->
+<meta name="be:sdk" content="dotnet_sdk_1.4.23" />
+<meta name="be:timer" content="31ms" />
+<meta name="be:orig_url" content="https%3a%2f%2fwww.liscr.com%2fpage-not-found" />
+<meta name="be:capsule_url" content="https%3a%2f%2fixfd1-api.bc0a.com%2fapi%2fixf%2f1.0.0%2fget_capsule%2ff00000000304620%2f430179943" />
+<meta name="be:norm_url" content="https%3a%2f%2fwww.liscr.com%2fpage-not-found" />
+<meta name="be:api_dt" content="py_2024; pm_10; pd_18; ph_02; pmh_09; p_epoch:1729242555910" />
+<meta name="be:mod_dt" content="py_2024; pm_10; pd_18; ph_02; pmh_09; p_epoch:1729242555910" />
+<meta name="be:messages" content="0" />
+<script type='text/javascript'>
+if (window.BEJSSDKObserver === undefined) {
+  (function(BEJSSDKObserver, $, undefined) {
+    var observer = void 0;
+    var listeners = [];
+    var readySet = [];
+    var doc = window.document;
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+
+    function checkSelector(selector, fn, indexList) {
+      var elements = doc.querySelectorAll(selector);
+  /**
+    issues on IE @see https://www.codesd.com/item/javascript-es6-not-a-function-error.html
+    elements = Array.from(elements);
+
+    */
+    for (var i = 0, len = elements.length; i < len; i++) {
+      /* -1 means all instances */
+      if (indexList != -1 && !(i in indexList)) {
+        continue;
+      }
+      var element = elements[i];
+      for (var j = 0; j < readySet.length; j++) {
+        if (readySet[j] == element.className || readySet[j] == element.id) {
+          return;
+        }
+      }
+      if (element.className) {
+        readySet.push(element.className);
+      }
+      if (element.id) {
+        readySet.push(element.id);
+      }
+
+      if (!element.ready || MutationObserver==null) {
+        element.ready = true;
+        fn.call(element, element);
+      }
+    }
+  }
+
+  function checkListeners() {
+    listeners.forEach(function (listener) {
+      return checkSelector(listener.selector, listener.fn, listener.indexList);
+    });
+  }
+
+  function removeListener(selector, fn) {
+    var i = listeners.length;
+    while (i--) {
+      var listener = listeners[i];
+      if (listener.selector === selector && listener.fn === fn) {
+        listeners.splice(i, 1);
+        if (!listeners.length && observer) {
+          observer.disconnect();
+          observer = null;
+        }
+      }
+    }
+  }
+
+/**
+ * Fire event on first js selector
+ * @param selector string to watch on
+ * @param fn       callback function
+ * @param index_list can be undefined which means only first one
+ *                   or -1 which means all
+ *                   or a list of allowable indexes
+ */
+ BEJSSDKObserver.jsElementReady = function(selector, fn, index_list) {
+  if (index_list === undefined) {
+    index_list = [];
+    index_list.push(0);
+  }
+
+  if (MutationObserver != null) {
+    if (!observer) {
+      observer = new MutationObserver(checkListeners);
+      observer.observe(doc.documentElement, {
+        childList: true,
+        subtree: true
+      });
+    }
+    listeners.push({ selector: selector, fn: fn, indexList: index_list });
+  } else {
+    /* <= IE8 */
+    if (!document.addEventListener) {
+      /* log("<=IE8 attachEvent assignment"); */
+      document.addEventListener = document.attachEvent;
+    }
+    document.addEventListener("DOMContentLoaded", function(event) {
+      var elements = doc.querySelectorAll(selector);
+      for (var i = 0, len = elements.length; i < len; i++) {
+        /* -1 means all instances */
+        if (index_list != -1 && !(i in index_list)) {
+          continue;
+        }
+        var element = elements[i];
+        element.ready = true;
+        fn.call(element, element);
+      }
+    });
+  }
+
+  checkSelector(selector, fn, index_list);
+  return function () {
+    return removeListener(selector, fn);
+  };
+};
+}(window.BEJSSDKObserver = window.BEJSSDKObserver || {}));
+}
+var jsElementReady = window.BEJSSDKObserver.jsElementReady;
+
+if (window.BELinkBlockGenerator === undefined) {
+  (function(BELinkBlockGenerator, $, undefined) {
+    BELinkBlockGenerator.MAXIMUM_HEADLINE_LENGTH = 100;
+    BELinkBlockGenerator.MAXIMUM_DESC_LENGTH = 200;
+
+    BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_URL_TYPE = 0;
+    BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_HEADLINE_TYPE = 1;
+    BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_DESCRIPTION_TYPE = 2;
+    BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_IMAGE_TYPE = 3;
+
+    BELinkBlockGenerator.REPLACEMENT_STRATEGY_OVERWRITE = 0;
+    BELinkBlockGenerator.REPLACEMENT_STRATEGY_POST_APPEND_ELEMENT = 1;
+    BELinkBlockGenerator.REPLACEMENT_STRATEGY_PRE_APPEND_ELEMENT = 2;
+    BELinkBlockGenerator.REPLACEMENT_STRATEGY_PRE_APPEND_PARENT = 3;
+
+    BELinkBlockGenerator.setMaximumHeadlineLength = function(length) {
+      BELinkBlockGenerator.MAXIMUM_HEADLINE_LENGTH = length;
+    };
+
+    BELinkBlockGenerator.setMaximumDescriptionLength = function(length) {
+      BELinkBlockGenerator.MAXIMUM_DESC_LENGTH = length;
+    };
+
+    BELinkBlockGenerator.generateIndividualLinks = function(parentElement, linkStructure, link) {
+      var link_level_element_tag = linkStructure[0];
+      var link_level_element = document.createElement(link_level_element_tag);
+      var link_attribute_dictionary = linkStructure[1];
+      var allowable_elements = linkStructure[2];
+      var children_link_structures = linkStructure[3];
+      for (var link_attribute_key in link_attribute_dictionary) {
+        link_level_element.setAttribute(link_attribute_key, link_attribute_dictionary[link_attribute_key]);
+      }
+
+      var added_something = false;
+      if (allowable_elements.indexOf(BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_URL_TYPE)>=0) {
+        link_level_element.setAttribute('href', link.url);
+        added_something = true;
+      }
+      if (allowable_elements.indexOf(BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_HEADLINE_TYPE)>=0 && link.h1) {
+        var headline_text = link.h1;
+        if (headline_text.length > BELinkBlockGenerator.MAXIMUM_HEADLINE_LENGTH) {
+          headline_text = headline_text.substring(0, BELinkBlockGenerator.MAXIMUM_HEADLINE_LENGTH) + '...';
+        }
+        var text_node = document.createTextNode(headline_text);
+        link_level_element.appendChild(text_node);
+        added_something = true;
+      }
+      if (allowable_elements.indexOf(BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_DESCRIPTION_TYPE)>=0 && link.desc) {
+        var desc_text = link.desc;
+        if (desc_text.length > BELinkBlockGenerator.MAXIMUM_DESC_LENGTH) {
+          desc_text = desc_text.substring(0, BELinkBlockGenerator.MAXIMUM_DESC_LENGTH) + '...';
+        }
+        var text_node = document.createTextNode(desc_text);
+        link_level_element.appendChild(text_node);
+        added_something = true;
+      }
+      if (allowable_elements.indexOf(BELinkBlockGenerator.IND_LINK_BLOCK_TYPE_IMAGE_TYPE)>=0 && link.image) {
+        link_level_element.setAttribute('src', link.image);
+        added_something = true;
+      }
+/**
+    don't emit for empty links, desc, headline, image
+    except for parent structures where allowable_length=0
+    */
+    if (!added_something && allowable_elements.length != 0) {
+
+      return;
+    }
+    /* go depth first */
+    for (var childrenIndex=0; childrenIndex<children_link_structures.length; childrenIndex++) {
+      var childLinkStructure = children_link_structures[childrenIndex];
+      BELinkBlockGenerator.generateIndividualLinks(link_level_element, childLinkStructure, link);
+    }
+    parentElement.appendChild(link_level_element);
+  };
+
+  BELinkBlockGenerator.insertLinkBlocks = function(targetElement, replacementStrategy, overallStructure, linkStructure, links,
+                                                   titleStructure) {
+    if (targetElement == null) {
+      return;
+    }
+
+    if (replacementStrategy == BELinkBlockGenerator.REPLACEMENT_STRATEGY_OVERWRITE) {
+      while (targetElement.firstChild) {
+        targetElement.removeChild(targetElement.firstChild);
+      }
+    }
+
+    var previousElement = targetElement;
+    for (var i=0;i<overallStructure.length;i++) {
+      var level_definition = overallStructure[i];
+      var level_element_tag = level_definition[0];
+      var level_element = document.createElement(level_element_tag);
+      var attribute_dictionary = level_definition[1];
+      for (var attribute_key in attribute_dictionary) {
+        level_element.setAttribute(attribute_key, attribute_dictionary[attribute_key]);
+      }
+
+      /* need to place title structure */
+      if (titleStructure && titleStructure[0] == i) {
+        var title_element_tag = titleStructure[1];
+        var title_element = document.createElement(title_element_tag);
+        var title_attribute_dictionary = titleStructure[2];
+        var title_text_content = titleStructure[3];
+        for (var title_attribute_key in title_attribute_dictionary) {
+          title_element.setAttribute(title_attribute_key, title_attribute_dictionary[title_attribute_key]);
+        }
+
+        var title_text_node = document.createTextNode(title_text_content);
+        title_element.appendChild(title_text_node);
+
+
+        level_element.appendChild(title_element);
+      }
+
+      /* last level place links */
+      if (i == overallStructure.length-1) {
+        for (var link_i=0; link_i < links.length; link_i++) {
+          var link = links[link_i];
+          for (var linkStructureIndex=0;linkStructureIndex < linkStructure.length; linkStructureIndex++) {
+            BELinkBlockGenerator.generateIndividualLinks(level_element, linkStructure[linkStructureIndex], link)
+          }
+        }
+      }
+
+      /* first level child we need to check placement */
+      if (previousElement == targetElement) {
+        if (replacementStrategy == BELinkBlockGenerator.REPLACEMENT_STRATEGY_PRE_APPEND_ELEMENT) {
+          /* 2 means insert right before */
+          previousElement.insertBefore(level_element, targetElement.firstChild);
+        } else if (replacementStrategy == BELinkBlockGenerator.REPLACEMENT_STRATEGY_PRE_APPEND_PARENT) {
+          /* 3 means insert right before at parent level */
+          var parentElement = previousElement.parentElement;
+          parentElement.insertBefore(level_element, previousElement);
+        } else {
+          previousElement.appendChild(level_element);
+        }
+      } else {
+        previousElement.appendChild(level_element);
+      }
+      previousElement = level_element;
+    }
+  };
+}(window.BELinkBlockGenerator = window.BELinkBlockGenerator || {}))
+};
+</script>
+
+<style>
+.be-ix-link-block {}
+</style>
+<script type='text/javascript'>
+      function positionLinkBlock(targetContainer) {
+          if (targetContainer != null) {
+              var strLinkBlock = '<div class="be-ix-link-block"><div class="be-related-link-container"><div class="be-label">Also of Interest</div><ul class="be-list"><li class="be-list-item"><a class="be-related-link" href="https://www.liscr.com/about-us/innovative">World Most Technologically Advanced Registry</a></li><li class="be-list-item"><a class="be-related-link" href="https://www.liscr.com/maritime/maritime-security">Expert Guidance for ISPS Code Requirements</a></li><li class="be-list-item"><a class="be-related-link" href="https://www.liscr.com/maritime/certification-services">Vessel Certification Services Department</a></li></ul> </div></div>';
+              targetContainer.insertAdjacentHTML('afterbegin', strLinkBlock);
+          }
+      }
+
+      jsElementReady('.be-ix-link-block', positionLinkBlock);
+
+  </script>
+
+
+<!-- AutoPilot Integration - End -->
+
+    <!-- AP: Integration End -->
+
+    <!--Open graph tags !-->
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:image" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Page Not Found" />
+    <meta property="og:url" content="https://www.liscr.com/page-not-found" />
+    <meta property="og:site_name" content="LISCR | LIBERIAN REGISTRY" />
+    <meta property="og:description" content="" />
+    <meta property="og:keywords" content="" />
+    <meta name="description" content="" />
+    <!--Open graph tags !-->
+
+    <!-- External CSS -->
+        <link rel="stylesheet" href="/Resources/Assets/css/bootstrap-min.css">
+    <link rel="stylesheet" href="/Resources/Assets/css/style.css">
+    <link rel="stylesheet" href="/Resources/Assets/css/master.css">
+    <link rel="stylesheet" href="/Resources/Assets/css/style-responsive.css">
+
+    <link rel="stylesheet" href="/Resources/Assets/css/boxicons-min.css">
+    <link rel="stylesheet" href="/Resources/Assets/css/font-awesome-min.css">
+<link href="/Resources/Assets/css/datatables-min.css" rel="stylesheet" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0">
+    <!-- Google Fonts -->
+
+    <link rel="stylesheet" href="/Resources/Assets/css/owl-carousel.css">
+
+    <link rel="stylesheet" href="/Resources/Assets/css/treeselectjs_static/treeselectjs.css">
+
+    <!-- Document Preloaded Script libraries -->
+    <script src="/Resources/Assets/js/jquery-min.js"></script>
+    <!-- End Document Preloaded Script libraries -->
+
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z37SYFMQKY"></script>
+<script type="text/javascript">!function(T,l,y){var S=T.location,k="script",D="instrumentationKey",C="ingestionendpoint",I="disableExceptionTracking",E="ai.device.",b="toLowerCase",w="crossOrigin",N="POST",e="appInsightsSDK",t=y.name||"appInsights";(y.name||T[e])&&(T[e]=t);var n=T[t]||function(d){var g=!1,f=!1,m={initialize:!0,queue:[],sv:"5",version:2,config:d};function v(e,t){var n={},a="Browser";return n[E+"id"]=a[b](),n[E+"type"]=a,n["ai.operation.name"]=S&&S.pathname||"_unknown_",n["ai.internal.sdkVersion"]="javascript:snippet_"+(m.sv||m.version),{time:function(){var e=new Date;function t(e){var t=""+e;return 1===t.length&&(t="0"+t),t}return e.getUTCFullYear()+"-"+t(1+e.getUTCMonth())+"-"+t(e.getUTCDate())+"T"+t(e.getUTCHours())+":"+t(e.getUTCMinutes())+":"+t(e.getUTCSeconds())+"."+((e.getUTCMilliseconds()/1e3).toFixed(3)+"").slice(2,5)+"Z"}(),iKey:e,name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,sampleRate:100,tags:n,data:{baseData:{ver:2}}}}var h=d.url||y.src;if(h){function a(e){var t,n,a,i,r,o,s,c,u,p,l;g=!0,m.queue=[],f||(f=!0,t=h,s=function(){var e={},t=d.connectionString;if(t)for(var n=t.split(";"),a=0;a<n.length;a++){var i=n[a].split("=");2===i.length&&(e[i[0][b]()]=i[1])}if(!e[C]){var r=e.endpointsuffix,o=r?e.location:null;e[C]="https://"+(o?o+".":"")+"dc."+(r||"services.visualstudio.com")}return e}(),c=s[D]||d[D]||"",u=s[C],p=u?u+"/v2/track":d.endpointUrl,(l=[]).push((n="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",a=t,i=p,(o=(r=v(c,"Exception")).data).baseType="ExceptionData",o.baseData.exceptions=[{typeName:"SDKLoadFailed",message:n.replace(/\./g,"-"),hasFullStack:!1,stack:n+"\nSnippet failed to load ["+a+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(S&&S.pathname||"_unknown_")+"\nEndpoint: "+i,parsedStack:[]}],r)),l.push(function(e,t,n,a){var i=v(c,"Message"),r=i.data;r.baseType="MessageData";var o=r.baseData;return o.message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+n+")").replace(/\"/g,"")+'"',o.properties={endpoint:a},i}(0,0,t,p)),function(e,t){if(JSON){var n=T.fetch;if(n&&!y.useXhr)n(t,{method:N,body:JSON.stringify(e),mode:"cors"});else if(XMLHttpRequest){var a=new XMLHttpRequest;a.open(N,t),a.setRequestHeader("Content-type","application/json"),a.send(JSON.stringify(e))}}}(l,p))}function i(e,t){f||setTimeout(function(){!t&&m.core||a()},500)}var e=function(){var n=l.createElement(k);n.src=h;var e=y[w];return!e&&""!==e||"undefined"==n[w]||(n[w]=e),n.onload=i,n.onerror=a,n.onreadystatechange=function(e,t){"loaded"!==n.readyState&&"complete"!==n.readyState||i(0,t)},n}();y.ld<0?l.getElementsByTagName("head")[0].appendChild(e):setTimeout(function(){l.getElementsByTagName(k)[0].parentNode.appendChild(e)},y.ld||0)}try{m.cookie=l.cookie}catch(p){}function t(e){for(;e.length;)!function(t){m[t]=function(){var e=arguments;g||m.queue.push(function(){m[t].apply(m,e)})}}(e.pop())}var n="track",r="TrackPage",o="TrackEvent";t([n+"Event",n+"PageView",n+"Exception",n+"Trace",n+"DependencyData",n+"Metric",n+"PageViewPerformance","start"+r,"stop"+r,"start"+o,"stop"+o,"addTelemetryInitializer","setAuthenticatedUserContext","clearAuthenticatedUserContext","flush"]),m.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4};var s=(d.extensionConfig||{}).ApplicationInsightsAnalytics||{};if(!0!==d[I]&&!0!==s[I]){var c="onerror";t(["_"+c]);var u=T[c];T[c]=function(e,t,n,a,i){var r=u&&u(e,t,n,a,i);return!0!==r&&m["_"+c]({message:e,url:t,lineNumber:n,columnNumber:a,error:i}),r},d.autoExceptionInstrumented=!0}return m}(y.cfg);function a(){y.onInit&&y.onInit(n)}(T[t]=n).queue&&0===n.queue.length?(n.queue.push(a),n.trackPageView({})):a()}(window,document,{
+src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
+crossOrigin: "anonymous", 
+cfg: { // Application Insights Configuration
+    connectionString: 'InstrumentationKey=5457e7c3-a4e8-4840-9ff0-2c7243fcf5aa;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=15b17dc2-340a-4e01-a0dc-bdf60b650d69'
+}});</script></head>
+
+<body class="appear-animate">
+
+    <div b-2vlvxq0p1p class="page" id="top">
+
+
+<section id="">
+    <header class="header" data-ktc-search-exclude="" id="header" style="">
+        <div class="top_onlinelibray works-filter">
+            <div class="top_onlinelibray_warpper">
+                <span class="top_onlinelibray_lables"><a href="/about-us/green-ship-recycling-program">Green Ship Recycling</a></span> <span>|</span>
+                <span class="top_onlinelibray_lables"><a href="/onlinelibrary/">Online Library</a></span> <span>|</span>
+                <span class="top_onlinelibray_lables"><a href="/order-publications">Order Publications</a></span> <span>|</span>
+                <span class="top_onlinelibray_lables"><a href="/pay-online">Pay Online</a></span> <span>|</span>
+                <span class="top_onlinelibray_lables"><a href="https://ecorp.liscr.com/Account/Login.aspx?ReturnUrl=%2f" target="_blank">eCorp</a></span> <span>|</span>
+
+                <span class="top_onlinelibray_lables"><a href="https://waypoint.liscr.com/" target="_blank">WayPoint</a></span> <span>|</span>
+
+                <span class="top_onlinelibray_lables"><a href="/about-us/global-presence">Global Presence</a></span> <span>|</span>
+				 <span class="top_onlinelibray_lables"><a href="/about-us/careers">Careers</a></span> <span>|</span>
+                <span class="top_onlinelibray_lables"><a href="/contact-us">Contact Us </a></span> <span>|</span>
+
+                <span class="top_onlinelibray_lables vn-click"> <!-- <a href="#"> --> <span class="material-symbols-outlined serachmain">search </span> <!-- </a> --> </span>
+            </div>
+        </div>
+
+
+        <nav class="navbar menucontainer">
+            <section class="navbar__left__logo">
+                <div class="burger" id="burger">
+                    <span class="burger-line"></span>
+                    <span class="burger-line"></span>
+                    <span class="burger-line"></span>
+                </div>
+            </section>
+            <section class="navbar__left">
+                <a href="/" class="brand">
+                    <img class="brand_logo1" src="/LISCR/media/Resources/Pages/Header/LISCR.png" />
+                </a>
+
+            </section>
+            <section class="navbar__right">
+                <span class="overlay"></span>
+                <div class="menu" id="menu">
+                    <div class="menu__header">
+                        <span class="menu__arrow"><i class="bx bx-chevron-left"></i></span>
+                        <span class="menu__title"></span>
+                    </div>
+                    <ul class="menu__inner">
+                        <li class="menu__item menu__dropdown">
+
+                            <a href="/about-us" class="menu__link menu_hoverline1">
+                                About Us
+                                <i class="material-symbols-outlined topmenu_icon_view">keyboard_arrow_down</i>
+
+                            </a>
+                            <div class="submenu megamenu__text flex-column">
+                                <div class="d-flex">
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/about-us/why-us">Why Us </a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/about-us/largest-flag-worldwide">Largest Flag Worldwide</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/innovation-and-energy-transition">Innovation and Energy Transition</a></li>
+
+                                            <li><a class="liscr_Listed_alink" href="/about-us/global-presence">Global Presence</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/paris-and-tokyo-mou">Paris MoU and Tokyo MoU Whitelisted</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/innovative">Innovations and Technology</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/harmonized-audit-program-c-bfa">Harmonized Audit Program &amp; C-BFA</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/imo-council-representation">IMO Council Category A Member</a></li>
+                                            
+                                            <li><a class="liscr_Listed_alink" href="/news-and-insights">News and Insights</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/about-us/global-presence">Global Presence</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/about-us/global-presence#AFRICA%20&%20MIDDLE%20EAST">Africa & Middle East</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/global-presence#ASIA">Asia</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/global-presence#EUROPE">Europe</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/global-presence#NORTH%20AMERICA">North America</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/global-presence#CENTRAL%20&%20SOUTH%20AMERICA">Central & South America</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner submenu_h_lastmenu works-filter">
+                                        <h4 class="submenu__title subhistory_warpper1">
+                                            <a class="certificationservices_link" href="/about-us/history">History </a>
+                                        </h4>
+
+                                        <ul class="submenu__list">
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="menu_ContactUs_panel">
+                                    <a class="Contact_lable_link" href="/contact-us">
+                                        <button class="Contact_call_btn">
+                                            <span class="ContactOfficer_lable"> Contact Us  </span>  <span class="Contact_arrow1"><img src="/LISCR/media/Resources/Pages/header/active_arrow_mark.png" /></span>
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="menu__item menu__dropdown">
+                            <a href="/vessel-registration" class="menu__link menu_hoverline1">
+                                Vessel Registration
+                                <i class="material-symbols-outlined topmenu_icon_view">keyboard_arrow_down</i>
+                            </a>
+
+                            <div class="submenu megamenu__text flex-column">
+
+                                <div class="d-flex">
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/vessel-registration">REGISTRATION</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#Registration%20Under%20Construction">Registration Under Construction </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#Newbuilding%20Registration">Newbuilding Registration</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#Flag%20Transfer">Flag Transfer</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#Re-Registration">Re-Registration</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#Bareboat%20In">Bareboat In</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#Bareboat%20Out">Bareboat Out</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#Registration%20in%20Lay%20Up%20Status">Registration in Lay Up Status </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/about-us/green-ship-recycling-program">Green Ship Recycling </a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner submenu_h_lastmenu works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/vessel-registration#mortgage-recordings">MORTGAGE</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#mortgage-recordings">Mortgage Recording </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#electronic-filing-procedures">Electronic Filing Procedures </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/vessel-registration#mortgage-and-conveyance-instruments">Mortgage and Conveyance Instruments </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="menu_ContactUs_panel">
+                                    <a class="Contact_lable_link" href="/contact-us">
+                                        <button class="Contact_call_btn">
+                                            <span class="ContactOfficer_lable"> Contact Us  </span>  <span class="Contact_arrow1"><img src="/LISCR/media/Resources/Pages/Header/active_arrow_mark.png" /></span>
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="menu__item menu__dropdown">
+
+                            <a href="/maritime" class="menu__link menu_hoverline1">
+                                Maritime
+                                <i class="material-symbols-outlined topmenu_icon_view">keyboard_arrow_down</i>
+                            </a>
+                            <div class="submenu megamenu__text flex-column">
+                                <div class="d-flex">
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/maritime/certification-services">CERTIFICATION SERVICES </a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/certification-services#minimum-safe-manning">Minimum Safe Manning (MSMC) </a></li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/certification-services#civil-liability">
+                                                    Bunker, Civil Liability and Wreck<br /> Removal Certificates (BCLC / CLC / WRC)
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/certification-services#continuous-synopsis-record">
+                                                    Continuous Synopsis<br />
+                                                    Record (CSR)
+                                                </a>
+                                            </li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/certification-services#ship-radio-station-licenses">Ship Radio Station Licenses</a></li>
+
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/certification-services#satellite-services">Satellite Services</a></li>
+
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/certification-services#inmarsat-activations">Inmarsat Activations</a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/certification-services#iridium-services">Iridium Services</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/maritime/vessel-audit-and-inspection">Vessel Audit &amp; Inspection </a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/vessel-audit-and-inspection#schedule-an-audit-inspection">Schedule an Audit/Inspection </a></li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/vessel-audit-and-inspection#harmonized-ISM-ISPS-audits-and-MLC-inspection">
+                                                    Harmonized ISM/ISPS Audits<br />
+                                                    and MLC Inspection
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/vessel-audit-and-inspection#combined-block-fee-agreement">
+                                                    Combined Block<br />
+                                                    Fee Agreement
+                                                </a>
+                                            </li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/vessel-audit-and-inspection#dynamic-prevention-program">Dynamic Prevention Program</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/maritime/regulations-and-standards">Regulations &amp; Standards </a></h4>
+
+                                        <ul class="submenu__list">
+                                           
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards#MARPOL-annex-VI">MARPOL Annex VI</a></li> 
+										<li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards/iacs-ui-s-not-applied-by-liberia">IACS UI's not applied by Liberia</a></li>
+										<li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards#SOLAS II-1/3-13">SOLAS II-1/3-13: List of Authorized RO’s </a></li>
+											<li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards#recognized-organizations">Recognized Organizations </a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards#extended-dry-dock-program">Extended Dry Dock Program</a></li>
+											
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards/inventory-of-hazardous-materials-(ihm)-expert-companies">
+                                                    Inventory of Hazardous<br />
+                                                    Material (IHM) Expert Companies
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards/authorized-lifeboat-service-providers">
+                                                    Authorized Lifeboat<br />
+                                                    Service Providers
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards/list-of-approved-electronic-record-books">
+                                                    Approved Electronic<br />
+                                                    Record Books
+                                                </a>
+                                            </li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/regulations-and-standards/ballast-water-management">Ballast Water Management</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/maritime/maritime-labour">Maritime Labour</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-labour#vessel-MLC-certification">Vessel MLC Certification </a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-labour#seafarer-recruitment">Seafarer Recruitment</a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-labour#MLC-block-fee-agreements">MLC Block Fee Agreements</a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-labour#special-compliance-services">Special Compliance Services</a></li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-labour#resolution-of-seafarers-complaints">
+                                                    Resolution of Seafarer<br />
+                                                    Complaints
+                                                </a>
+                                            </li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/mlc-faq">MLC FAQs</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/maritime/maritime-investigations">Marine Investigations</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-investigations#ReportsReportFormsMarine">Report Forms </a></li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-investigations#ReportsMarineCasualties">
+                                                    Reports of Marine<br />
+                                                    Casualties
+                                                </a>
+                                            </li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-investigations#FormInitialReportsview">Form of Initial Reports </a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-investigations#SOLAS">SOLAS </a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter submenu_h_lastmenu">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/maritime/maritime-security">Maritime Security</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security/security-levels">Security Level</a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security#best-management-practices">Best Management Practices</a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security#global-counter-piracy-guidance">Global Counter Piracy Guidance</a></li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security#private-maritime-security-companies">
+                                                    Private Maritime<br />
+                                                    Security Companies
+                                                </a>
+                                            </li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security#carriage-of-armed-guards">Carriage of Armed Guards</a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security#gulf-of-guinea-guidelines">Gulf of Guinea Guidelines</a></li>
+                                            <li><a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security#anti-piracy-checklist">Anti-Piracy Checklist</a></li>
+                                            <li>
+                                                <a class="liscr_Listed_alink maritimesubllCertification01" href="/maritime/maritime-security#long-range-identification-tracking">
+                                                    Long Range Identification<br />
+                                                    Tracking (LRIT)
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="menu_ContactUs_panel">
+                                    <a class="Contact_lable_link" href="/contact-us">
+                                        <button class="Contact_call_btn">
+                                            <span class="ContactOfficer_lable"> Contact Us  </span>  <span class="Contact_arrow1"><img src="/LISCR/media/Resources/Pages/Header/active_arrow_mark.png" /></span>
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="menu__item menu__dropdown">
+                            <a href="/seafarers" class="menu__link menu_hoverline1">
+                                Seafarers
+                                <i class="material-symbols-outlined topmenu_icon_view">keyboard_arrow_down</i>
+                            </a>
+                            <div class="submenu megamenu__text flex-column">
+                                <div class="d-flex">
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/seafarers#Filing%20Agent">Filing Agent</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#forms-for-filing-agents">Forms for Filing Agents </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#liberian-maritime-law-and-regulations">Liberian Maritime Law &amp; Regulations</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#seafarers-certification-documentation">Seafarer&#39;s Certification Documentation</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/seafarers#Seafarer">Seafarer</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#license-exam-requirements">License Exam Requirements</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#apply-directly-for-documents">Apply Directly for Documents</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#apply-directly-for-documents">Certificates of Receipt of Application (CRA)</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#apply-directly-for-documents">Maritime Labour Complaint Resolution</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/seafarers#Training%20Center">Training Center</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#how-to-apply-for-approval">How to Apply for Approval</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#approved-seafarer-certification-training-courses">Approved Seafarer Certification Training Courses</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#approved-other-training-courses">Approved Other Training Courses</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#training-license-exam-requirements">License Exam Requirements</a></li>
+                                        </ul>
+                                    </div>
+									 <div class="submenu__inner works-filter submenu_h_lastmenu">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/seafarers#Medical%20Program">Medical Center</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#apply-for-approval">How to Apply for Approval</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers#medical-practitioner-requierments">Medical Practitioner Requirements</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/seafarers/approved-medical-practitioners">List of Liberian Approved Doctors</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="menu_ContactUs_panel">
+                                    <a class="Contact_lable_link" href="/contact-us">
+                                        <button class="Contact_call_btn">
+                                            <span class="ContactOfficer_lable"> Contact Us  </span>  <span class="Contact_arrow1"><img src="/LISCR/media/Resources/Pages/Header/active_arrow_mark.png" /></span>
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="menu__item menu__dropdown">
+                            <a href="/corporate-registry" class="menu__link menu_hoverline1">
+                                Corporate Registry
+                                <i class="material-symbols-outlined topmenu_icon_view">keyboard_arrow_down</i>
+                            </a>
+                            <div class="submenu megamenu__text flex-column">
+                                <div class="d-flex">
+                                    <div class="submenu__inner works-filter crop_order_1">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/corporate-registry">About </a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry#the-LISCR-trustCompany">The LISCR Trust Company</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry#service-of-process">Service of Process </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry#e-corp">e-Corp </a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter crop_order_2">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/corporate-registry/corporate-entities">Corporate Entities </a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/corporate-entities#Corporation">Corporation</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/corporate-entities#Shelf%20Companies">Shelf Companies </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/corporate-entities#Limited%20Liability%20Company%20LLC">Limited Liability Company (LLC) </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/corporate-entities#Partnership%20and%20Limited%20Partnership">Partnership &amp; Limited Partnership </a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/corporate-entities#Private%20Foundation">Private Foundation</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/corporate-entities#Foreign%20Maritime%20Entity%20%20FME">Foreign Maritime Entity (FME)</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/corporate-entities#Re-Domiciliation">Re-Domiciliation</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter crop_order_3">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/corporate-registry/additional-services">Essential Services</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li>
+                                                <a class="liscr_Listed_alink" href="/corporate-registry/additional-services#share-certificates-and-corporate-kits">
+                                                    Share Certificates<br />
+                                                    and Corporate Kits
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="liscr_Listed_alink" href="/corporate-registry/additional-services#legal-entity-verification-and-compliance">
+                                                    Legal Entity Verification<br />
+                                                    and Compliance
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="submenu__inner works-filter crop_order_4 submenu_h_lastmenu">
+                                        <h4 class="submenu__title"><a class="certificationservices_link" href="/corporate-registry/resources">Resources</a></h4>
+
+                                        <ul class="submenu__list">
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/resources#brochures-and-facts-sheets">Brochures &amp; Facts Sheets</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/resources#liberian-law">Liberian Law</a></li>
+                                            <li><a class="liscr_Listed_alink" href="/corporate-registry/resources#OECD-tax-and-compliance">OECD, Tax and Compliance</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="menu_ContactUs_panel">
+                                    <a class="Contact_lable_link" href="/contact-us">
+                                        <button class="Contact_call_btn">
+                                            <span class="ContactOfficer_lable"> Contact Us  </span>  <span class="Contact_arrow1"><img src="/LISCR/media/Resources/Pages/Header/active_arrow_mark.png" /></span>
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+
+                        <div class="moblie_view_warpper">
+                            <div class="Library_menu__item">
+                                <a href="/onlinelibrary/" class="footer_sublink">
+                                    Online Library
+                                </a>
+                            </div>
+                            <div class="Library_menu__item">
+                                <a href="/order-publications" class="footer_sublink">
+                                    Order Publications
+                                </a>
+                            </div>
+                            <div class="Library_menu__item">
+                                <a href="/pay-online" class="footer_sublink">
+                                    Pay Online
+
+                                </a>
+                            </div>
+                            <div class="Library_menu__item">
+                                <a href="https://waypoint.liscr.com/" class="footer_sublink">
+                                    WayPoint
+
+                                </a>
+                            </div>
+
+                            <div class="Library_menu__item">
+                                <a href="/about-us/global-presence" class="footer_sublink">
+                                    Global Presence
+
+                                </a>
+                            </div>
+							<div class="Library_menu__item">
+                                <a href="/about-us/careers" class="footer_sublink">
+                                    Careers
+                                </a>
+                            </div>
+                            <div class="Library_menu__item">
+                                <a href="/contact-us" class="footer_sublink">
+                                    Contact Us
+
+                                </a>
+                            </div>
+                            <div class="Library_menu__item">
+                                <a href="https://ecorp.liscr.com/Account/Login.aspx?ReturnUrl=%2f" target="_blank" class="footer_sublink">
+                                    eCorp
+
+                                </a>
+                            </div>
+                        </div>
+                    </ul>
+                </div>
+
+
+                <a class="Duty_Contact_lable_link" href="https://support.liscr.com/" target="_blank">
+                    <button class="Duty_call_btn">
+                        <span class="Officer_lable"> Duty Officer Video Call </span>  <span><img src="/LISCR/media/Resources/Pages/Header/video_icon.png" /></span>
+                    </button>
+                </a>
+
+                <span class="mob_icons_view">
+                    <span class="vn-click search_vn_left1"><span class="material-symbols-outlined mob_serach_icon1">search</span></span>
+                    <span class="video_icon_mob">
+                        <a class="Duty_Contact_lable_link" href="https://support.liscr.com/" target="_blank">
+                            <img src="/LISCR/media/Resources/Pages/Header/video_icon.png" loading="lazy" fetchpriority="low" decoding="async">
+                        </a>
+                    </span>
+                </span>
+
+            </section>
+        </nav>
+    </header>
+</section>
+        <div b-2vlvxq0p1p class="d-block MainEditorBodyStyle">
+
+                <div b-2vlvxq0p1p></div>
+
+            <div b-2vlvxq0p1p id="vn-info" class="inputsearch__wrapper">
+                <div b-2vlvxq0p1p class="inputsearch_vn-info">
+                    <form method="get" class="searchBox" action="/search">
+                        <input b-2vlvxq0p1p name="searchtext" type="text" class="searchtextinnerpage" id="searchInput"
+                               placeholder="Search website..." autocomplete="off">
+                        <span b-2vlvxq0p1p class="search_spinner vn-click">
+                            <span b-2vlvxq0p1p class="material-symbols-outlined spinner-icon" style="display: none;"> progress_activity </span>                           
+                        </span>
+                        <span b-2vlvxq0p1p class="search_material_symbols vn-click">
+                            <span b-2vlvxq0p1p class="material-symbols-outlined close_icon_symbol">close</span>
+                        </span>
+                    </form>
+                    <div b-2vlvxq0p1p class="search-results" id="js-search-results">
+                    </div>
+                </div>
+            </div>
+
+            
+
+
+
+
+
+
+
+
+<div>
+    <div class="main_largest__warpper">
+        <div class="container-fluid">
+            <div class="row">
+                    <div class="col-12 col-lg-6">
+                        
+
+
+
+
+
+
+
+
+    <section  class="position-relative">
+
+        <div class="warpperview overflow-hidden page_not_found_warpper">
+            <div class="wow scaleOutIn animated">
+                    <h2 class="lable_h2"><span class="wow charsAnimIn" data-splitting="chars">This Page Cannot be Found.</span></h2>
+
+                    <div class="lable_h3 wow fadeInUp animated" data-wow-delay="0.4s" style="visibility: visible; animation-delay: 0.4s; animation-name: fadeInUp;"><div class="pagenotfoundv_warpper_lable2" id="isPasted">We’re here to help! Utilize the steps below to find what you need:</div><ul class="pagenotfoundv_warpper_lable1UI"><li>Head back to the homepage&nbsp;</li><li>Use the search bar in the upper right corner</li></ul><div class="pagenotfoundv_warpper_lablelost2">Still lost? Reach out to our team for guidance.&nbsp;<a class="vesselget_global_card_adit_link" href="/contact-us">&nbsp;Contact Us</a></div></div>
+
+
+
+            </div>
+        </div>
+    </section>
+
+    
+
+
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        
+
+
+
+
+
+
+
+
+    <section  class="position-relative">
+
+        <div class="warpperview overflow-hidden page_not_found_warpper_image">
+            <div class="wow scaleOutIn animated">
+                    <div class="logoview"><img loading="lazy" class="logoview_img fr-fil fr-dib" src="/LISCR/media/Resources/Pages/page_not_found/shipping_banner_06.jpg"></div>
+
+
+
+
+            </div>
+        </div>
+    </section>
+
+    
+
+
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+
+
+<section id="liscr_footer_section">
+    <div class="footer_warpperpanel" data-ktc-search-exclude="">
+        <div class="footer_warpperpanel_panel">
+            <div class="footer_warpperpanel_panel_logo_01 wow fadeInUp animated animated" data-wow-delay="0.4s">
+                <div class="footer_logo"><a href="/"><img alt="LISCR" src="/LISCR/media/Resources/Pages/Header/LISCR.png"></a></div>
+                <div class="facebook_warpper"><span><a href="https://www.facebook.com/LISCR.LLC/" target="_blank"><i class="bx bxl-facebook-circle facebook_l_icon_01"></i></a></span><span><a href="https://www.linkedin.com/company/liscr/" target="_blank"><i class="bx bxl-linkedin-square facebook_l_icon_02"></i></a></span><span><a href="https://www.youtube.com/channel/UCoqWrKq7C4IcTvWoRR8I-QQ" target="_blank"><i class="bx bxl-youtube facebook_l_icon_03"></i></a></span></div>
+                <div class="footer_warpperpanel_ct_contact"><span class="footer_warpperpanel_ct_1"><a class="footer_sublink ct_link_hover contact_blod" href="/contact-us">CONTACT US</a></span><span class="footer_warpperpanel_ct_1">|</span><span class="footer_warpperpanel_ct_1"><a class="footer_sublink ct_link_hover contact_blod" href="/contact-us/privacy-policy">PRIVACY POLICY</a></span></div>
+                <button class="btn btn-link slide-toggle information_btnck" type="button">Do not sell my personal information</button>
+            </div>
+            <div class="footer_warpperpanel_panel_01 wow fadeInUp animated animated" data-wow-delay="0.6s">
+                <h3 class="services_footer_lable_h1">SERVICES</h3>
+                <ul class="fw-menu clearlist">
+                    <li><a class="footer_sublink" href="/vessel-registration">Vessel Registration</a></li>
+                    <li><a class="footer_sublink" href="/maritime">Maritime</a></li>
+                    <li><a class="footer_sublink" href="/seafarers">Seafarers</a></li>
+                    <li><a class="footer_sublink" href="/corporate-registry">Corporate Registry</a></li>
+                    <li><a class="footer_sublink" href="/pay-online">Pay Online</a></li>
+
+                </ul>
+            </div>
+            <div class="footer_warpperpanel_panel_01 wow fadeInUp animated animated" data-wow-delay="0.8s">
+                <h3 class="services_footer_lable_h1">RESOURCES</h3>
+                <ul class="fw-menu clearlist">
+                    <li><a class="footer_sublink" href="/order-publications">Order Publications</a></li>
+                    <li><a class="footer_sublink" href="/onlinelibrary/">Online Library</a></li>
+                    <li><a class="footer_sublink" href="/about-us/global-presence">Global Presence</a></li>
+                    <li><a class="footer_sublink" href="/maritime/mlc-seafarers-complaints-form">MLC Complaints</a></li>
+                    <li><a class="footer_sublink" href="/maritime/maritime-document-verification">Maritime Document Verification</a></li>
+                    <li><a class="footer_sublink" href="/maritime/verify-seafarer-certificate">Verify Seafarer Certificate</a></li>
+					<li><a class="footer_sublink" href="/about-us/careers">Careers</a></li>
+                </ul>
+            </div>
+            <div class="footer_warpperpanel_panel_01 wow fadeInUp animated animated" data-wow-delay="0.8s">
+                <h3 class="services_footer_lable_h1 online_footer_lable">ONLINE PORTALS</h3>
+                <ul class="fw-menu clearlist">
+                    <li><a class="footer_sublink" href="https://client.liscr.com/" target="_blank">Client Portal</a></li>
+                    <li><a class="footer_sublink" href="https://corporate.liscr.com/" target="_blank">Corporate Portal</a></li>
+                    <li><a class="footer_sublink" href="https://ecorp.liscr.com/Account/Login.aspx?ReturnUrl=%2f" target="_blank">eCorp</a></li>
+                    <li><a class="footer_sublink" href="https://sea.liscr.com/" target="_blank">SEA System (for Agent)</a></li>
+                    <li><a class="footer_sublink" href="https://seafarers.liscr.com/" target="_blank">Seafarer Certification Application</a></li>
+                </ul>
+            </div>
+            <div class="footer_warpperpanel_panel_01 wow online_footer_lable_2 fadeInUp animated animated" data-wow-delay="0.8s">
+                <ul class="fw-menu clearlist">
+                    <li><a class="footer_sublink" href="https://seafarerexam.liscr.com/" target="_blank">Seafarer Exams</a></li>
+                    <li><a class="footer_sublink" href="https://medicalcertificate.liscr.com/" target="_blank">Seafarer Medical</a></li>
+                    <li><a class="footer_sublink" href="https://seafarer.liscr.com/" target="_blank">Seafarer Portal</a></li>
+                    <li><a class="footer_sublink" href="https://waypoint.liscr.com/Account/Login?returnUrl=https%3A%2F%2Fwaypoint.liscr.com%2FHome%2FMaritime%3F_systemMenuId%3D3" target="_blank">WayPoint</a></li>
+                    <li><a class="footer_sublink" href="https://wpcloud.liscr.com/search" target="_blank">WP Cloud</a></li>
+                </ul>
+            </div>
+            <div class="footer_warpperpanel_panel_01 wow fadeInUp animated animated" data-wow-delay="0.9s">
+                <h3 class="services_footer_lable_h1">RELATED LINKS</h3>
+                <div class="AutoPilot_warpper">
+                    <div class="AutoPilot_targerview" id="AutoPilotDiv">
+                        <div class="be-ix-link-block"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="copy_footer_warpperpanel" data-ktc-search-exclude="">
+        <div class="copy_right_lable">&copy; 2026 COPYRIGHT LISCR LLC, ALL RIGHTS RESERVED</div>
+        <div class="local-scroll Scrolltop_warpper"><a href="#top" class="link-to-top"><span class="material-symbols-outlined footer_link_icon">arrow_upward</span><span class="visually-hidden">Scroll to top</span></a></div>
+    </div>
+</section>
+<div class="Slidebox" style="display:none">
+    <div class="modal_logo_warppert1">
+        <div class="Preference_CookieNotice_header"><span><img class="liscr_logo_cookies" src="https://www.liscr.com/LISCR/media/Resources/Pages/Header/LISCR.png"></span></div>
+    </div>
+    <div class="modal_logo_warppert2 slide-toggle"><button type="button" class="btn-close" aria-label="Close"></button></div>
+    <div class="manage_warpper" style="font-family:'HCo Gotham',arial,sans-serif">
+        <div class="PrivacyAcceptcookiesmanage_warpper" style="height:72vh;padding-bottom: 120px;">
+            <div class="Acceptcookiesmanage_h1">Privacy Preference Center</div>
+            <div class="Acceptcookiesmanage_lable">Tracking technologies that we enable are an essential part of the frameworks we have adopted to securely enable our digital ecosystem. Some of these trackers (which may include third-party cookies) are strictly necessary and are enabled for security purposes, to technically deliver the website or service requested, and to facilitate the exercise of other individual rights.</div>
+            <div><a href="/contact-us/privacy-policy" target="_blank" class="cookie_Privacy_link">More information</a></div>
+            <div class="ManageAcceptcookiesmanage_h1">Manage Consent Preferences</div>
+            <div class="Consent_Strictly_warpper">
+                <div class="ask_accordion">
+                    <div class="ask_accordion-item">
+                        <button id="ask_accordion-button-1" aria-expanded="false">
+                            <div class="PrivacyAcceptcookiesmanage_h1"><span class="Always_link1">Strictly Necessary Cookies</span><span class="Always_link2">Always Active</span></div>
+                            <span class="ask_icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="ask_accordion-content">
+                            <p style="font-size:14px;font-weight:400">These cookies are set to provide the service, application or resource requested. Without these cookies, your request cannot be properly delivered. They are usually set to manage actions made by you, such as requesting website visual elements, pages resources or due user login/logoff.</p>
+                        </div>
+                    </div>
+                    <div class="ask_accordion-item">
+                        <button id="ask_accordion-button-2" aria-expanded="false">
+                            <div class="PrivacyAcceptcookiesmanage_h1"><span class="Always_link1">Performance Cookies</span><span class="Always_link2"><input class="checkboxtoggle_btn" id="PerformanceacceptedFunctionalCookies" type="checkbox"></span></div>
+                            <span class="ask_icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="ask_accordion-content">
+                            <div class="cookiesask_lable">These cookies are set to provide quantitative measures of website visitors. Information collected with these cookies is used in operations to measure website or software KPIs, such as performance. With the usage of these cookies we are able to count visits and traffic sources to improve the performance of our site and application. If you do not allow these cookies, we will not know when you have visited our site.</div>
+                            <div class="Vendor_list_p1">Vendor List</div>
+                            <div class="Vendor_acc_warpper">
+                                <div class="cookiesaccordion-wrapper">
+                                    <div class="cookiesacc-head">Gstatic</div>
+                                    <div class="cookiesacc-body">
+                                        <div class="Parentcookiesacc">
+                                            <div class="Parentcookiesacc_h1">Parent Company</div>
+                                            <div class="Parentcookiesacc_h2">Google</div>
+                                            <div class="Parentcookiesacc_h1">Default Category</div>
+                                            <div class="Parentcookiesacc_h2">Performance Cookies</div>
+                                            <div class="Parentcookiesacc_h1">Default Description</div>
+                                            <div class="Parentcookiesacc_h2">liscr.com is a Web domain owned and used by Google for accessing the liscr server: a server where Google hosts its static content like CSS, images or JavaScript.</div>
+                                            <div class="Parentcookiesacc_h1">Privacy Policy Link</div>
+                                            <div class="Parentcookiesacc_h2"><a href="/contact-us/privacy-policy" target="_blank" class="cookie_Privacy_link">https://www.liscr.com/contact-us/privacy-policy</a></div>
+                                            <div class="Parentcookiesacc_h1">Cookie Policy Link</div>
+                                            <div class="Parentcookiesacc_h2"><a href="/contact-us/privacy-policy" target="_blank" class="cookie_Privacy_link">https://www.liscr.com/contact-us/privacy-policy</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="testPreference_CookieNotice_footer" style="background: #fff;">
+        <div class="ask_accordion-content">
+            <div class="Acceptcookiesmanage_lable" style="padding: 13px 22px 0px;">By continuing to visit our website and accessing LISCR services you agree to our<a href="https://www.liscr.com/contact-us/privacy-policy"> Privacy Policy.</a></div>
+        </div>
+        <div class="testSaveAcceptcookies_w1">
+            <div class="SaveAcceptcookies_w2"><button type="button" class="SaveAcceptcookies_call_btn" onclick="saveAllPreferences_CookieConsent()" style="font-family:'HCo Gotham',arial,sans-serif">Confirm My Choices</button></div>
+        </div>
+        <div class="testpowerSaveAcceptcookies_w1"><span class="powerSaveAcceptcookies_w1_text" style="font-family:'HCo Gotham',arial,sans-serif">Powered by</span><span><img class="powerSaveAcceptcookies_w1_img" src="https://www.liscr.com/LISCR/media/Resources/Pages/Header/LISCR.png"></span></div>
+    </div>
+</div>
+<div id="modal_warpperbox" style="top:100%">
+    <div class="Preference_CookieNotice_header"><span><img class="liscr_logo_cookies" src="https://www.liscr.com/LISCR/media/Resources/Pages/Header/LISCR.png"></span></div>
+    <button type="button" class="btn-close" aria-label="Close"></button>
+    <div class="manage_warpper">
+        <div class="Acceptcookiesmanage_warpper">
+            <div class="Acceptcookiesmanage_h1">Privacy Preference Center</div>
+            <div class="Acceptcookiesmanage_lable">Tracking technologies that we enable are an essential part of the frameworks we have adopted to securely enable our digital ecosystem. Some of these trackers (which may include third-party cookies) are strictly necessary and are enabled for security purposes, to technically deliver the website or service requested, and to facilitate the exercise of other individual rights. Depending on your choice we may also enable other categories of non-essential trackers to deliver additional functionalities, such as personalisation, application enhancement or improved website performance, registering web traffic analysis and, assisting in our marketing campaigns.</div>
+            <div><a href="/" target="_blank" class="cookie_Privacy_link">More information</a></div>
+            <div class="ManageAcceptcookiesmanage_h1">Manage Consent Preferences</div>
+            <div class="TargetingNecessary">
+                <div class="PrivacyAcceptcookiesmanage_h1"><span class="Always_link1">Strictly Necessary Cookies</span><span class="Always_link2">Always Active</span></div>
+                <div class="PrivacyAcceptcookiesmanage_h1"><span class="Always_link1">Performance Cookies</span><span class="Always_link2"><input class="checkboxtoggle_btn" id="PerformanceacceptedFunctionalCookies" type="checkbox"></span></div>
+            </div>
+        </div>
+    </div>
+    <div class="Preference_CookieNotice_footer">
+        <div class="SaveAcceptcookies_w1">
+            <div class="SaveAcceptcookies_w2"><button type="button" class="SaveAcceptcookies_call_btn" onclick="saveAllPreferences_CookieConsent()">Confirm My Choices</button></div>
+        </div>
+        <div class="powerSaveAcceptcookies_w1"><span class="powerSaveAcceptcookies_w1_text">Powered by</span><span><img class="powerSaveAcceptcookies_w1_img" src="https://www.liscr.com/LISCR/media/Resources/Pages/Header/LISCR.png"></span></div>
+    </div>
+</div>
+<div class="CookieNotice_warpper" id="cookieContainerBox" style="display:none">
+    <div class="CookieNotice_warpper_left_panel">
+        <div class="cookie_btn_m"><span class="material-symbols-outlined cookie_btn_m_icon">cookie</span></div>
+        <p class="CookieNotice_lable_text">We use cookies to enhance your browsing experience. Functional cookies are necessary for the site to navigate. We are also tracking cookies for analytics and to improve user experience. By clicking “Accept All”, you agree to the storing of cookies on your device to enhance site navigation, analyze site usage, and assist in our marketing efforts as detailed in our<a href="/contact-us/privacy-policy" target="_blank" class="cookie_Privacy_link"> Privacy Notice</a>. Your cookies choice does not affect visiting the website and provision of LISCR services to you. By continuing to visit our website and accessing LISCR services you agree to our<a href="/contact-us/privacy-policy" target="_blank" class="cookie_Privacy_link"> Privacy Policy</a>.</p>
+    </div>
+    <div class="CookieNotice_warpper_right_panel"><button type="button" class="Acceptcookies_call_btn" onclick="acceptAllCookieConsent()">Accept All</button><button type="button" class="Acceptcookies_call_btn" onclick="requiredCookieConsent()">Accept Necessary</button><button type="button" class="Acceptcookies_call_btn slide-toggle">My Preferences</button></div>
+</div>
+<div class="Adjustcookie_btn_m" id="cookiePreferencesButton_Container" style="display:none">
+    <div class="cooktooltip-container">
+        <button type="button" class="Acceptcookies_btn btn slide-toggle"><span class="material-symbols-outlined cookie_btn_m_icon">cookie</span></button>
+        <div class="cooktooltip">Adjust my preferences</div>
+    </div>
+</div>            <div b-2vlvxq0p1p style="display: none;">
+                <button id="chatbot-toggler"><span><img class="chatbot_img_q" src="/LISCR/media/Resources/Pages/Home/chatbot_logo.png"></span><span class="material-symbols-outlined chatbot_closed_icon">close</span></button><div class="chatbot-popup"><div class="chat-header"><div class="header-info handshake_warpper_logo"><img class="chatbot-logo" src="https://www.liscr.com/LISCR/media/Resources/Pages/Header/LISCR.png" alt="Chatbot Logo"></div><button id="support_agent_chatbot"><span class="material-symbols-outlined handshak_icon">support_agent</span><span class="material-symbols-outlined chatbot_support_icon" style="display:none">close</span></button><button id="chatbot_chat_unmute" style="right:108px;display:none" class="mx-1 px-1 rounded-circle border-0 position-absolute"><span class="material-symbols-outlined handshak_icon">text_to_speech</span><span class="material-symbols-outlined chatbot_support_icon" style="display:none">close</span></button><button id="chatbot_chat_mute" style="display:none;right:108px" class="mx-1 px-1 rounded-circle border-0 position-absolute"><span class="material-symbols-outlined handshak_icon">voice_over_off</span><span class="material-symbols-outlined chatbot_support_icon" style="display:none">close</span></button><div class="handshake_warpper_icons"><span><button id="close-chatbot" class="material-symbols-outlined">keyboard_arrow_down</button></span></div></div><div class="chat-body" id="chatbot_Container"><div class="message bot-message"><img class="bot-avatar" src="https://www.liscr.com//LISCR/media/Resources/Pages/header/fav_icon.png" alt="Chatbot Logo" width="50" height="50"><div class="message-text">Welcome!<br>Thank you for connecting with us. We are here to assist you. Please share your questions or requests.</div></div><div class="arrow_down_bot_warpper"><button type="button" id="arrow_down_activechat" class="material-symbols-outlined arrow_down_bot">arrow_circle_down</button></div><div class="chatbot_input_warpper_1" id="chatbot_input_from_main"><div><input type="text" id="chatFirstName" class="chatbot_input_lable" placeholder="First Name"></div><div><input type="text" id="chatLastName" class="chatbot_input_lable" placeholder="Last Name"></div><div><input type="text" id="chatEmail" class="chatbot_input_lable" placeholder="Email"></div><div><button type="button" class="chatbot_input_btn">Submit</button></div></div></div><div class="chat-footer"><form action="#" class="chat-form"><textarea placeholder="Message..." class="message-input" required></textarea><div class="chat-controls"><div class="file-upload-wrapper"><div style="display:none"><input type="file" accept="image/*" id="file-input" hidden> <img src="#"><button type="button" id="file-upload" class="material-symbols-rounded">attach_file</button><button type="button" id="file-cancel" class="material-symbols-rounded">close</button></div></div><button type="submit" id="send-message" class="material-symbols-outlined">arrow_upward</button></div></form></div></div>
+            </div>
+        </div>
+
+        <script src="/_content/Kentico.Content.Web.Rcl/Scripts/jquery-3.5.1.js"></script>
+<script src="/_content/Kentico.Content.Web.Rcl/Scripts/jquery.unobtrusive-ajax.js"></script>
+<script type="text/javascript">
+window.kentico = window.kentico || {};
+window.kentico.builder = {}; 
+window.kentico.builder.useJQuery = true;</script><script src="/Content/Bundles/Public/pageComponents.min.js"></script>
+<script src="/_content/Kentico.Content.Web.Rcl/Content/Bundles/Public/systemFormComponents.min.js"></script>
+
+
+    </div>
+
+    <script type="text/javascript">
+        var gtagKey = "G-Z37SYFMQKY";
+    </script>
+
+        <!-- JS -->
+    <script src="/Resources/Assets/js/d3.js"></script>
+    <script src="/Resources/Assets/js/bootstrap-bundle-min.js"></script>
+    <script src="/Resources/Assets/js/jquery-ajaxchimp-min.js"></script>
+
+<script src="/Resources/Assets/js/plugins.js"></script>
+
+<script src="/Resources/Assets/js/datatables-min.js"></script>
+
+    <!-- Carousel Scripts start -->
+    <script src="/Resources/Assets/js/owl-carousel.js"></script>
+    <!-- End Carousel Scripts -->
+
+    <script src="/Resources/Assets/js/axios.min.js"></script>
+
+    <script src="/Resources/Assets/js/all.js"></script>
+
+<script src="/Resources/Assets/js/browser.js"></script>
+
+    <!-- End JS -->
+
+    <!-- Linking Emoji Mart script for emoji picker -->    
+
+
+</body>
+
+</html>
