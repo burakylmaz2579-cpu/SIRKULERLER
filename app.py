@@ -3,6 +3,7 @@ import urllib.parse
 import streamlit as st
 import pandas as pd
 import hashlib
+import textwrap
 
 # Set page config
 st.set_page_config(
@@ -212,23 +213,23 @@ def normalize_columns(df):
     mapping = {}
     for col in df.columns:
         col_lower = str(col).lower()
-        if 'dosya' in col_lower or 'sirküler' in col_lower or 'sirkuler' in col_lower:
+        if 'dosya' in col_lower or 'sirküler' in col_lower or 'sirkuler' in col_lower or 'filename' in col_lower:
             mapping[col] = 'Filename'
-        elif 'kategori' in col_lower:
+        elif 'kategori' in col_lower or 'category' in col_lower:
             mapping[col] = 'Category'
-        elif 'konu' in col_lower:
-            if 'türkçe' in col_lower or 'turkce' in col_lower or 'trke' in col_lower or 'trk' in col_lower or 't\u00fcrk' in col_lower:
+        elif 'konu' in col_lower or 'subject' in col_lower:
+            if any(k in col_lower for k in ['türkçe', 'turkce', 'trke', 'trk', 'tr', '_tr']):
                 mapping[col] = 'Subject_TR'
             else:
                 mapping[col] = 'Subject_EN'
-        elif 'referans' in col_lower or 'dayan' in col_lower or 'kural' in col_lower:
+        elif 'referans' in col_lower or 'dayan' in col_lower or 'kural' in col_lower or 'reference' in col_lower:
             mapping[col] = 'References'
         elif 'özet' in col_lower or 'ozet' in col_lower or 'zet' in col_lower or 'summary' in col_lower:
-            if 'türkçe' in col_lower or 'turkce' in col_lower or 'trke' in col_lower or 'trk' in col_lower or 't\u00fcrk' in col_lower:
+            if any(k in col_lower for k in ['türkçe', 'turkce', 'trke', 'trk', 'tr', '_tr']):
                 mapping[col] = 'Summary_TR'
             else:
                 mapping[col] = 'Summary_EN'
-        elif 'tavsiye' in col_lower or 'ne yap' in col_lower or 'rec' in col_lower or 'action' in col_lower:
+        elif 'tavsiye' in col_lower or 'ne yap' in col_lower or 'rec' in col_lower or 'action' in col_lower or 'recommendation' in col_lower:
             mapping[col] = 'Recommendations_TR'
     df = df.rename(columns=mapping)
     return df
@@ -713,46 +714,45 @@ if page == "📊 Dashboard & Arama":
     st.markdown('<h3 class="gradient-subheader" style="margin-top:0;">🔍 Arama Sonuçları</h3>', unsafe_allow_html=True)
     
     if filtered_df.empty:
-        st.info("ℹ[] Kriterlere uyan sirküler bulunamadı. Lütfen filtreleri veya arama kelimesini değiştirin.")
+        st.info("ℹ️ Kriterlere uyan sirküler bulunamadı. Lütfen filtreleri veya arama kelimesini değiştirin.")
     else:
-        # Show interactive search table
-        st.dataframe(
-            filtered_df[['Flag', 'Category', 'Subject_TR', 'References', 'Filename']],
-            use_container_width=True,
-            column_config={
-                "Flag": st.column_config.TextColumn("Bayrak"),
-                "Category": st.column_config.TextColumn("Kategori"),
-                "Subject_TR": st.column_config.TextColumn("Konu (Türkçe)"),
-                "References": st.column_config.TextColumn("Kural Dayanağı"),
-                "Filename": st.column_config.TextColumn("Dosya Adı")
-            }
-        )
-        
-        st.markdown("---")
-        st.markdown('<h3 class="gradient-subheader">📄 Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h3>', unsafe_allow_html=True)
-        
-        doc_options = filtered_df['Filename'].tolist()
-        def get_option_label(fname):
-            rows = filtered_df[filtered_df['Filename'] == fname]
-            if not rows.empty:
-                flag = rows.iloc[0]['Flag']
-                subj = rows.iloc[0]['Subject_TR']
-                return f"[{flag}] {subj if subj else fname}"
-            return fname
+        # Helper function for rendering flag section
+        def render_flag_section(flag_df, flag_name):
+            st.dataframe(
+                flag_df[['Category', 'Subject_TR', 'References', 'Filename']],
+                use_container_width=True,
+                column_config={
+                    "Category": st.column_config.TextColumn("Kategori"),
+                    "Subject_TR": st.column_config.TextColumn("Konu (Türkçe)"),
+                    "References": st.column_config.TextColumn("Kural Dayanağı"),
+                    "Filename": st.column_config.TextColumn("Dosya Adı")
+                },
+                key=f"df_{flag_name}"
+            )
             
-        selected_fname = st.selectbox(
-            "Detaylarını görmek, tavsiyeleri okumak ve indirmek istediğiniz sirküleri seçin:",
-            options=doc_options,
-            format_func=get_option_label,
-            key="selected_doc_details"
-        )
-        
-        if selected_fname:
-            selected_row = filtered_df[filtered_df['Filename'] == selected_fname].iloc[0]
-            pdf_file_path = get_pdf_file_path(selected_row)
+            st.markdown("---")
+            st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
             
-            with st.container():
-                st.markdown(f"""
+            doc_options = flag_df['Filename'].tolist()
+            def get_option_label(fname):
+                rows = flag_df[flag_df['Filename'] == fname]
+                if not rows.empty:
+                    subj = rows.iloc[0]['Subject_TR']
+                    return f"{subj if subj else fname}"
+                return fname
+                
+            selected_fname = st.selectbox(
+                f"Detaylarını görmek, tavsiyeleri okumak ve indirmek istediğiniz {flag_name} sirkülerini seçin:",
+                options=doc_options,
+                format_func=get_option_label,
+                key=f"selected_doc_details_{flag_name}"
+            )
+            
+            if selected_fname:
+                selected_row = flag_df[flag_df['Filename'] == selected_fname].iloc[0]
+                pdf_file_path = get_pdf_file_path(selected_row)
+                
+                card_html = f"""
                 <div class="glass-card" style="border-left: 5px solid #0284c7; background: #ffffff;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <span style="font-size:1.3rem; font-weight:700; color:#0369a1;">{selected_row['Subject_TR'] if selected_row['Subject_TR'] else selected_row['Subject_EN']}</span>
@@ -783,7 +783,8 @@ if page == "📊 Dashboard & Arama":
                         </div>
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """
+                st.markdown(card_html, unsafe_allow_html=True)
                 
                 col1, col2, col3 = st.columns([3, 3, 6])
                 with col1:
@@ -796,12 +797,12 @@ if page == "📊 Dashboard & Arama":
                                 data=pdf_bytes,
                                 file_name=selected_row['Filename'],
                                 mime="application/pdf",
-                                key="download_selected_pdf"
+                                key=f"download_pdf_{flag_name}_{selected_fname}"
                             )
                         except Exception as e:
                             st.caption(f"⚠️ Dosya okunamadı: {str(e)}")
                     else:
-                        st.button("❌ PDF Bulunamadı", disabled=True, key="download_err_selected")
+                        st.button("❌ PDF Bulunamadı", disabled=True, key=f"download_err_{flag_name}_{selected_fname}")
                 
                 with col2:
                     flag_cfg = FLAG_GUIDES.get(selected_row['Flag'])
@@ -862,32 +863,36 @@ elif page == "📋 Bayrak Kontrol Listeleri":
     st.markdown('<h3 class="gradient-subheader">📝 Sörvey Kontrol Maddeleri (Surveyor Checklists)</h3>', unsafe_allow_html=True)
     
     checklists = guide['checklists']
-    tab_names = list(checklists.keys())
+    tab_names = list(checklists.keys()) + ["Tüm Sirkülerler"]
     tabs = st.tabs(tab_names)
     
     for i, name in enumerate(tab_names):
         with tabs[i]:
-            items = checklists[name]
-            st.markdown(f"<p style='color:#be185d; font-weight:600; font-size:1.05rem; margin-bottom:12px;'>⚠️ {selected_guide_flag} Bayrağı Altında {name} Kontrollerinde Dikkat Edilecekler:</p>", unsafe_allow_html=True)
-            
-            for item in items:
-                st.markdown(f"""
-                <div style="background:#ffffff; border-left:3px solid #be185d; border-radius:0 6px 6px 0; padding:12px; margin-bottom:10px; font-size:0.95rem; line-height:1.4; color:#334155; border-top:1px solid #f1f5f9; border-right:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,0.01);">
-                    {item}
-                </div>
-                """, unsafe_allow_html=True)
-                
-            tab_lower = name.lower()
-            if 'ism' in tab_lower or 'smc' in tab_lower:
-                cat_mask = df_circulars['Category'].apply(lambda x: 'ism' in str(x).lower() or 'smc' in str(x).lower())
-            elif 'isps' in tab_lower or 'issc' in tab_lower:
-                cat_mask = df_circulars['Category'].apply(lambda x: 'isps' in str(x).lower() or 'issc' in str(x).lower())
-            elif 'mlc' in tab_lower:
-                cat_mask = df_circulars['Category'].apply(lambda x: 'mlc' in str(x).lower())
-            elif 'statüter' in tab_lower or 'donanım' in tab_lower or 'ekipman' in tab_lower:
-                cat_mask = df_circulars['Category'].apply(lambda x: 'statüter' in str(x).lower() or 'donanım' in str(x).lower() or 'exemption' in str(x).lower() or 'bwm' in str(x).lower())
-            else:
+            if name == "Tüm Sirkülerler":
+                st.markdown(f"<p style='color:#be185d; font-weight:600; font-size:1.05rem; margin-bottom:12px;'>📂 {selected_guide_flag} Bayrağına Ait Tüm Sirkülerler:</p>", unsafe_allow_html=True)
                 cat_mask = pd.Series([True] * len(df_circulars))
+            else:
+                items = checklists[name]
+                st.markdown(f"<p style='color:#be185d; font-weight:600; font-size:1.05rem; margin-bottom:12px;'>⚠️ {selected_guide_flag} Bayrağı Altında {name} Kontrollerinde Dikkat Edilecekler:</p>", unsafe_allow_html=True)
+                
+                for item in items:
+                    st.markdown(f"""
+                    <div style="background:#ffffff; border-left:3px solid #be185d; border-radius:0 6px 6px 0; padding:12px; margin-bottom:10px; font-size:0.95rem; line-height:1.4; color:#334155; border-top:1px solid #f1f5f9; border-right:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,0.01);">
+                        {item}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                tab_lower = name.lower()
+                if 'ism' in tab_lower or 'smc' in tab_lower:
+                    cat_mask = df_circulars['Category'].apply(lambda x: 'ism' in str(x).lower() or 'smc' in str(x).lower())
+                elif 'isps' in tab_lower or 'issc' in tab_lower:
+                    cat_mask = df_circulars['Category'].apply(lambda x: 'isps' in str(x).lower() or 'issc' in str(x).lower())
+                elif 'mlc' in tab_lower:
+                    cat_mask = df_circulars['Category'].apply(lambda x: 'mlc' in str(x).lower())
+                elif 'statüter' in tab_lower or 'donanım' in tab_lower or 'ekipman' in tab_lower:
+                    cat_mask = df_circulars['Category'].apply(lambda x: 'statüter' in str(x).lower() or 'donanım' in str(x).lower() or 'exemption' in str(x).lower() or 'bwm' in str(x).lower())
+                else:
+                    cat_mask = pd.Series([True] * len(df_circulars))
                 
             tab_circs = df_circulars[(df_circulars['Flag'] == selected_guide_flag) & cat_mask]
             
@@ -940,7 +945,7 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                 for t_idx, row in page_circs.iterrows():
                     pdf_file_path = get_pdf_file_path(row)
                     
-                    st.markdown(f"""
+                    card_html_tab = textwrap.dedent(f"""
                     <div class="glass-card" style="margin-bottom: 15px; padding: 15px; border-left: 3px solid #0284c7; background: #ffffff;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <span style="font-size:1.05rem; font-weight:700; color:#0369a1;">{row['Subject_TR'] if row['Subject_TR'] else row['Subject_EN']}</span>
@@ -963,7 +968,8 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                             </div>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """)
+                    st.markdown(card_html_tab, unsafe_allow_html=True)
                     
                     col_dl, col_site, col_empty = st.columns([2.5, 2.5, 7])
                     with col_dl:
@@ -1055,3 +1061,103 @@ elif page == "🌐 Canlı Bayrak Siteleri":
             <p style="margin:0; color:#64748b; font-size:0.9rem;">{info['desc']}</p>
         </div>
         """, unsafe_allow_html=True)
+        
+    st.write("---")
+    st.markdown('<h2 class="gradient-text gradient-header" style="font-size:1.6rem; margin-top:20px;">🔄 Canlı Sirküler Güncelleme Takip Paneli</h2>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b;font-size:0.95rem;margin-bottom:15px;">Bayrakların resmi sitelerine bağlanarak yeni yayınlanan sirküler dosyası olup olmadığını yerel veritabanınızla karşılaştırarak denetleyin.</p>', unsafe_allow_html=True)
+    
+    if st.button("🔌 Sitelere Bağlan ve Yeni Yayınları Tara", type="primary"):
+        import requests
+        from bs4 import BeautifulSoup
+        
+        status_placeholder = st.empty()
+        status_placeholder.info("🔄 Resmi web sitelerine bağlanılıyor, lütfen bekleyin...")
+        
+        known_files = set(df_circulars['Filename'].dropna().str.lower().str.strip().tolist())
+        
+        new_circulars = []
+        
+        # 1. Comoros
+        try:
+            r = requests.get('http://bihlyumov.com/circulars/', timeout=8)
+            if r.status_code == 200:
+                soup = BeautifulSoup(r.text, 'html.parser')
+                for a in soup.find_all('a'):
+                    href = a.get('href', '')
+                    if '.pdf' in href.lower():
+                        filename = href.split('/')[-1]
+                        if filename.lower().strip() not in known_files:
+                            title = a.text.strip() if a.text.strip() else filename
+                            new_circulars.append({
+                                'Flag': 'Comoros',
+                                'Title': title,
+                                'Filename': filename,
+                                'Link': href
+                            })
+        except Exception as e:
+            st.warning(f"⚠️ Comoros sitesine bağlanırken hata oluştu: {str(e)}")
+            
+        # 2. Guinea Bissau
+        try:
+            r = requests.get('https://gbisr.com/marine-circulars/', headers={'User-Agent': 'Mozilla/5.0'}, timeout=8)
+            if r.status_code == 200:
+                soup = BeautifulSoup(r.text, 'html.parser')
+                for a in soup.find_all('a'):
+                    href = a.get('href', '')
+                    if '.pdf' in href.lower():
+                        filename = href.split('/')[-1]
+                        if filename.lower().strip() not in known_files:
+                            title = a.text.strip() if a.text.strip() else filename
+                            new_circulars.append({
+                                'Flag': 'Guinea Bissau',
+                                'Title': title,
+                                'Filename': filename,
+                                'Link': href
+                            })
+        except Exception as e:
+            st.warning(f"⚠️ Guinea Bissau sitesine bağlanırken hata oluştu: {str(e)}")
+            
+        # 3. Sierra Leone
+        try:
+            r = requests.get('https://slmarad.com/maritime-circulars/', headers={'User-Agent': 'Mozilla/5.0'}, timeout=8)
+            if r.status_code == 200:
+                soup = BeautifulSoup(r.text, 'html.parser')
+                for a in soup.find_all('a'):
+                    href = a.get('href', '')
+                    if '.pdf' in href.lower():
+                        filename = href.split('/')[-1]
+                        if filename.lower().strip() not in known_files:
+                            title = a.text.strip() if a.text.strip() else filename
+                            if not href.startswith('http'):
+                                href = 'https://slmarad.com/' + href
+                            new_circulars.append({
+                                'Flag': 'Sierra Leone',
+                                'Title': title,
+                                'Filename': filename,
+                                'Link': href
+                            })
+        except Exception as e:
+            st.warning(f"⚠️ Sierra Leone sitesine bağlanırken hata oluştu: {str(e)}")
+            
+        status_placeholder.empty()
+        
+        if new_circulars:
+            st.markdown(f'<div style="background-color: #fee2e2; border-left: 5px solid #ef4444; padding: 15px; border-radius: 4px; margin-bottom: 20px;"><h4 style="color: #991b1b; margin:0 0 5px 0;">🚨 Yeni Sirküler(ler) Tespit Edildi!</h4><p style="color: #7f1d1d; margin:0; font-size:0.95rem;">Resmi sitelerde yayınlanmış ancak yerel klasörünüzde bulunmayan <b>{len(new_circulars)} adet</b> dosya tespit edildi. Bu dosyaları indirip ilgili bayrak klasörüne ekleyin.</p></div>', unsafe_allow_html=True)
+            
+            # Show new items in a table
+            new_df = pd.DataFrame(new_circulars)
+            st.dataframe(
+                new_df[['Flag', 'Title', 'Filename']],
+                use_container_width=True,
+                column_config={
+                    "Flag": st.column_config.TextColumn("Bayrak Devleti"),
+                    "Title": st.column_config.TextColumn("Sirküler Başlığı / Tanım"),
+                    "Filename": st.column_config.TextColumn("Dosya Adı")
+                }
+            )
+            
+            st.markdown("#### 📥 Yeni Dosyaları Doğrudan İndirin:")
+            for item in new_circulars:
+                st.markdown(f"- **[{item['Flag']}]** {item['Title']} &rarr; [PDF İndir / Kaynağa Git]({item['Link']})")
+        else:
+            st.success("✅ Tüm sirkülerleriniz güncel! Web sitelerinde yerel veritabanınızda bulunmayan yeni bir sirküler dosyası tespit edilmedi.")
