@@ -809,6 +809,20 @@ if page == "📊 Dashboard & Arama":
                     if flag_cfg:
                         st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank" style="text-decoration:none;"><button style="padding:4px 12px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.9rem; height:38px; cursor:pointer; width:100%;">🌐 Bayrak Resmi Sitesine Git</button></a>', unsafe_allow_html=True)
 
+        flags_in_data = sorted(list(filtered_df['Flag'].unique()))
+        
+        if len(flags_in_data) > 1:
+            tab_titles = [f"{flag} ({len(filtered_df[filtered_df['Flag'] == flag])})" for flag in flags_in_data]
+            tabs = st.tabs(tab_titles)
+            for i, flag in enumerate(flags_in_data):
+                with tabs[i]:
+                    flag_df = filtered_df[filtered_df['Flag'] == flag]
+                    render_flag_section(flag_df, flag)
+        elif len(flags_in_data) == 1:
+            flag = flags_in_data[0]
+            flag_df = filtered_df[filtered_df['Flag'] == flag]
+            render_flag_section(flag_df, flag)
+
 # PAGE 2: FLAG GUIDES & CHECKLISTS
 elif page == "📋 Bayrak Kontrol Listeleri":
     st.markdown('<h1 class="gradient-text gradient-header">📋 Bayrak Bazlı Kontrol Listesi & Statutory Kriterleri</h1>', unsafe_allow_html=True)
