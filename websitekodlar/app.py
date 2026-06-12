@@ -1606,62 +1606,62 @@ elif page == "📋 Sörveyör Denetim Rehberi":
                 selected_row = display_circs.iloc[selected_audit_rows[0]]
                 pdf_file_path = get_pdf_file_path(selected_row)
             
-            st.markdown("---")
-            st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Seçilen Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
-            
-            card_html = clean_html(f"""
-            <div class="glass-card" style="border-left: 5px solid #0284c7; background: #ffffff;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <span style="font-size:1.3rem; font-weight:700; color:#0369a1;">{selected_row['Subject_TR'] if selected_row['Subject_TR'] else selected_row['Subject_EN']}</span>
-                    <div>
-                        <span class="badge badge-flag" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Flag']}</span>
-                        <span class="badge badge-cat" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Category']}</span>
+                st.markdown("---")
+                st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Seçilen Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
+                
+                card_html = clean_html(f"""
+                <div class="glass-card" style="border-left: 5px solid #0284c7; background: #ffffff;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-size:1.3rem; font-weight:700; color:#0369a1;">{selected_row['Subject_TR'] if selected_row['Subject_TR'] else selected_row['Subject_EN']}</span>
+                        <div>
+                            <span class="badge badge-flag" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Flag']}</span>
+                            <span class="badge badge-cat" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Category']}</span>
+                        </div>
                     </div>
-                </div>
-                <p style="margin-bottom:12px; font-size:0.9rem; color:#64748b;">
-                    <b>Dosya Adı:</b> {selected_row['Filename']} | 
-                    <b>Referanslar / Kural Dayanağı:</b> {selected_row['References'] if selected_row['References'] else 'Belirtilmedi'}
-                </p>
-                <hr style="border-color:#e2e8f0; margin:15px 0;"/>
-                <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:25px; font-size:0.95rem;">
-                    <div>
-                        <p style="color:#be185d; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Özet (TÜRKÇE)</p>
-                        <p style="color:#334155; line-height:1.5; margin-bottom:15px;">{selected_row['Summary_TR'] if selected_row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
-                        <p style="color:#0369a1; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Summary (ENGLISH)</p>
-                        <p style="color:#334155; line-height:1.5;">{selected_row['Summary_EN'] if selected_row['Summary_EN'] else 'No English summary available.'}</p>
-                    </div>
-                    <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0284c7; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
-                        <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 SÖRVEYÖRÜN YAPMASI GEREKENLER & KONTROL NOKTALARI</p>
-                        <div style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
-                            {format_recommendations(selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.'))}
+                    <p style="margin-bottom:12px; font-size:0.9rem; color:#64748b;">
+                        <b>Dosya Adı:</b> {selected_row['Filename']} | 
+                        <b>Referanslar / Kural Dayanağı:</b> {selected_row['References'] if selected_row['References'] else 'Belirtilmedi'}
+                    </p>
+                    <hr style="border-color:#e2e8f0; margin:15px 0;"/>
+                    <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:25px; font-size:0.95rem;">
+                        <div>
+                            <p style="color:#be185d; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Özet (TÜRKÇE)</p>
+                            <p style="color:#334155; line-height:1.5; margin-bottom:15px;">{selected_row['Summary_TR'] if selected_row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
+                            <p style="color:#0369a1; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Summary (ENGLISH)</p>
+                            <p style="color:#334155; line-height:1.5;">{selected_row['Summary_EN'] if selected_row['Summary_EN'] else 'No English summary available.'}</p>
+                        </div>
+                        <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0284c7; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
+                            <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 SÖRVEYÖRÜN YAPMASI GEREKENLER & KONTROL NOKTALARI</p>
+                            <div style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
+                                {format_recommendations(selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.'))}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            """)
-            st.markdown(card_html, unsafe_allow_html=True)
-            
-            col1, col2, col3 = st.columns([3, 3, 6])
-            with col1:
-                if pdf_file_path:
-                    try:
-                        with open(pdf_file_path, "rb") as f:
-                            pdf_bytes = f.read()
-                        st.download_button(
-                            label="📄 PDF İndir",
-                            data=pdf_bytes,
-                            file_name=selected_row['Filename'],
-                            mime="application/pdf",
-                            key=f"download_pdf_guide_{selected_guide_flag}_{selected_row['Filename']}"
-                        )
-                    except Exception as e:
-                        st.caption(f"⚠️ Hata: {str(e)}")
-                else:
-                    st.button("❌ PDF Bulunamadı", disabled=True, key=f"download_err_guide_{selected_guide_flag}_{selected_row['Filename']}")
-            with col2:
-                flag_cfg = FLAG_GUIDES.get(selected_row['Flag'])
-                if flag_cfg:
-                    st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank" style="text-decoration:none;"><button style="padding:4px 12px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.9rem; height:38px; cursor:pointer; width:100%;">🌐 Bayrak Resmi Sitesine Git</button></a>', unsafe_allow_html=True)
+                """)
+                st.markdown(card_html, unsafe_allow_html=True)
+                
+                col1, col2, col3 = st.columns([3, 3, 6])
+                with col1:
+                    if pdf_file_path:
+                        try:
+                            with open(pdf_file_path, "rb") as f:
+                                pdf_bytes = f.read()
+                            st.download_button(
+                                label="📄 PDF İndir",
+                                data=pdf_bytes,
+                                file_name=selected_row['Filename'],
+                                mime="application/pdf",
+                                key=f"download_pdf_guide_{selected_guide_flag}_{selected_row['Filename']}"
+                            )
+                        except Exception as e:
+                            st.caption(f"⚠️ Hata: {str(e)}")
+                    else:
+                        st.button("❌ PDF Bulunamadı", disabled=True, key=f"download_err_guide_{selected_guide_flag}_{selected_row['Filename']}")
+                with col2:
+                    flag_cfg = FLAG_GUIDES.get(selected_row['Flag'])
+                    if flag_cfg:
+                        st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank" style="text-decoration:none;"><button style="padding:4px 12px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.9rem; height:38px; cursor:pointer; width:100%;">🌐 Bayrak Resmi Sitesine Git</button></a>', unsafe_allow_html=True)
 
 # PAGE 4: FLAG OFFICIAL WEBSITES
 elif page == "🌐 Canlı Bayrak Siteleri":
