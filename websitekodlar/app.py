@@ -1827,12 +1827,18 @@ elif page == "🌐 Canlı Bayrak Siteleri":
             st.markdown("### ⚡ Otomatik Sisteme İndir & GitHub'a Gönder")
             st.markdown("Aşağıdaki alana GitHub erişim yetkinizi (Token) girerek bulunan tüm sirküler dosyalarını otomatik olarak indirebilir, Excel dosyalarını güncelleyebilir ve doğrudan yayındaki web sitenize gönderebilirsiniz.")
             
-            github_token_input = st.text_input(
-                "GitHub Personal Access Token (PAT):", 
-                type="password", 
-                help="GitHub üzerinde dosyaları otomatik güncelleyebilmek için buraya kişisel erişim token'ınızı yazmalısınız. Eğer yerel bilgisayarınızda çalışıyorsanız boş bırakabilirsiniz.",
-                value=st.secrets.get("GITHUB_TOKEN", "") if (isinstance(st.secrets, dict) or hasattr(st.secrets, 'get')) else ""
-            )
+            secret_token = st.secrets.get("GITHUB_TOKEN", "") if (isinstance(st.secrets, dict) or hasattr(st.secrets, 'get')) else ""
+            if secret_token:
+                st.info("🔓 **GitHub Entegrasyonu Aktif (Streamlit Secrets):** Erişim anahtarınız güvenli bir şekilde sunucu tarafında tanımlıdır. Sitedeki diğer kullanıcılar bu şifreyi göremez veya kopyalayamaz.")
+                github_token_input = secret_token
+            else:
+                github_token_input = st.text_input(
+                    "GitHub Personal Access Token (PAT):", 
+                    type="password", 
+                    placeholder="ghp_...",
+                    help="GitHub üzerinde dosyaları otomatik güncelleyebilmek için buraya kişisel erişim token'ınızı yazmalısınız. Eğer yerel bilgisayarınızda çalışıyorsanız boş bırakabilirsiniz.",
+                    value=""
+                )
             
             if st.button(f"📥 Tespit Edilen {len(new_circulars)} Sirküleri Otomatik İndir ve Sisteme Entegre Et", type="secondary"):
                 with st.spinner("🔄 Sirkülerler indiriliyor, Excel dosyaları düzenleniyor ve GitHub'a yükleniyor..."):
