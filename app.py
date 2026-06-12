@@ -1341,23 +1341,68 @@ elif page == "📋 Sörveyör Denetim Rehberi":
     if audit_circs.empty:
         st.info("Bu kategoriye ait sirküler bulunamadı.")
     else:
-        selection_audit = st.dataframe(
-            audit_circs[['Filename', 'Subject_TR', 'References']],
-            use_container_width=True,
-            column_config={
-                "Filename": st.column_config.TextColumn("Dosya Adı"),
-                "Subject_TR": st.column_config.TextColumn("Konu (Türkçe)"),
-                "References": st.column_config.TextColumn("Kural Dayanağı")
-            },
-            on_select="rerun",
-            selection_mode="single-row",
-            key=f"df_audit_guide_{selected_guide_flag}_{selected_audit.replace(' ', '_').replace('/', '_')}"
-        )
-        
-        selected_audit_rows = selection_audit.selection.rows
-        if selected_audit_rows:
-            selected_row = audit_circs.iloc[selected_audit_rows[0]]
-            pdf_file_path = get_pdf_file_path(selected_row)
+        # Add local filters side-by-side
+        col_local_cat, col_local_search = st.columns(2)
+        with col_local_cat:
+            unique_local_cats = set()
+            for cat_str in audit_circs['Category'].dropna().unique():
+                for c in str(cat_str).split(","):
+                    c_clean = c.strip()
+                    if c_clean:
+                        unique_local_cats.add(c_clean)
+            local_cat_options = ["Tümü"] + sorted(list(unique_local_cats))
+            selected_local_cat = st.selectbox(
+                "Kategori Filtresi (Category Filter):", 
+                local_cat_options, 
+                index=0,
+                key=f"local_cat_filter_{selected_guide_flag}_{selected_audit.replace(' ', '_')}"
+            )
+            
+        with col_local_search:
+            local_search_query = st.text_input(
+                "Tablo İçi Kelime Ara (Search Table):", 
+                value="",
+                placeholder="Örn: BWM, LSA, MMC-195...",
+                key=f"local_search_filter_{selected_guide_flag}_{selected_audit.replace(' ', '_')}"
+            )
+            
+        # Apply local filters to display_circs
+        display_circs = audit_circs.copy()
+        if selected_local_cat != "Tümü":
+            display_circs = display_circs[display_circs['Category'].apply(lambda x: selected_local_cat.lower() in str(x).lower())]
+            
+        if local_search_query:
+            q = local_search_query.lower()
+            display_circs = display_circs[
+                display_circs['Filename'].str.lower().str.contains(q) |
+                display_circs['Subject_TR'].str.lower().str.contains(q) |
+                display_circs['Subject_EN'].str.lower().str.contains(q) |
+                display_circs['References'].str.lower().str.contains(q) |
+                display_circs['Summary_TR'].str.lower().str.contains(q) |
+                display_circs['Recommendations_TR'].str.lower().str.contains(q)
+            ]
+            
+        if display_circs.empty:
+            st.info("Filtreleme kriterlerine uyan sirküler bulunamadı.")
+        else:
+            selection_audit = st.dataframe(
+                display_circs[['Category', 'Filename', 'Subject_TR', 'References']],
+                use_container_width=True,
+                column_config={
+                    "Category": st.column_config.TextColumn("Kategori"),
+                    "Filename": st.column_config.TextColumn("Dosya Adı"),
+                    "Subject_TR": st.column_config.TextColumn("Konu (Türkçe)"),
+                    "References": st.column_config.TextColumn("Kural Dayanağı")
+                },
+                on_select="rerun",
+                selection_mode="single-row",
+                key=f"df_audit_guide_{selected_guide_flag}_{selected_audit.replace(' ', '_').replace('/', '_')}"
+            )
+            
+            selected_audit_rows = selection_audit.selection.rows
+            if selected_audit_rows:
+                selected_row = display_circs.iloc[selected_audit_rows[0]]
+                pdf_file_path = get_pdf_file_path(selected_row)
             
             st.markdown("---")
             st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Seçilen Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
