@@ -17,6 +17,26 @@ if "search_query_val" not in st.session_state:
 def clean_html(html_str):
     return "\n".join(line.strip() for line in html_str.split("\n") if line.strip())
 
+def format_recommendations(rec_str):
+    if not rec_str:
+        return '<div style="color:#1e293b; line-height:1.5;">İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.</div>'
+    
+    rec_str = rec_str.strip()
+    # Split by numbers like 1., 2., 3. or 1- or 1) followed by space
+    parts = re.split(r'(?=\b\d+[\.\-\)]\s)', rec_str)
+    parts = [p.strip() for p in parts if p.strip()]
+    
+    html_out = ""
+    for part in parts:
+        match = re.match(r'^(\d+)[\.\-\)]\s*(.*)', part)
+        if match:
+            num = match.group(1)
+            content = match.group(2)
+            html_out += f'<div style="margin-bottom:8px; line-height:1.5; display:flex; align-items:flex-start;"><span style="font-weight:700; color:#0284c7; margin-right:8px; min-width:20px;">{num}.</span><span style="color:#1e293b;">{content}</span></div>'
+        else:
+            html_out += f'<div style="margin-bottom:8px; line-height:1.5; color:#1e293b;">{part}</div>'
+    return html_out
+
 # Set page config
 st.set_page_config(
     page_title="PHRS Bayrak Sirkülerleri & Statutory Kontrol Portalı",
@@ -839,28 +859,14 @@ if page == "📊 Dashboard & Arama":
             st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
             
             def get_option_label(fname):
-                rows = flag_df[flag_df['Filename'] == fname]
-                if not rows.empty:
-                    subj = rows.iloc[0]['Subject_TR']
-                    return f"{subj if subj else fname}"
                 return fname
-                
-            try:
-                default_idx = doc_options.index(st.session_state[state_key])
-            except ValueError:
-                default_idx = 0
                 
             selected_fname = st.selectbox(
                 f"Detaylarını görmek, tavsiyeleri okumak ve indirmek istediğiniz {flag_name} sirkülerini seçin:",
                 options=doc_options,
                 format_func=get_option_label,
-                index=default_idx,
-                key=f"selected_doc_details_{flag_name}"
+                key=state_key
             )
-            
-            if selected_fname != st.session_state[state_key]:
-                st.session_state[state_key] = selected_fname
-                st.rerun()
             
             if selected_fname:
                 selected_row = flag_df[flag_df['Filename'] == selected_fname].iloc[0]
@@ -889,9 +895,9 @@ if page == "📊 Dashboard & Arama":
                         </div>
                         <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0284c7; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
                             <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 SÖRVEYÖRÜN YAPMASI GEREKENLER & KONTROL NOKTALARI</p>
-                            <p style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
-                                {selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.')}
-                            </p>
+                            <div style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
+                                {format_recommendations(selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.'))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1090,7 +1096,7 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                             </div>
                             <div style="background-color:#f0f9ff; border:1px solid #bae6fd; border-left: 3px solid #0284c7; border-radius:4px; padding:10px;">
                                 <p style="color:#0369a1; font-weight:700; margin-bottom:4px; font-size:0.75rem;">📋 SÖRVEYÖRÜN YAPMASI GEREKENLER & KONTROL NOKTALARI</p>
-                                <p style="color:#1e293b; line-height:1.4; font-weight:500;">{row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin.')}</p>
+                                <div style="color:#1e293b; line-height:1.4; font-weight:500;">{format_recommendations(row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin.'))}</div>
                             </div>
                         </div>
                     </div>
@@ -1172,9 +1178,9 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                     </div>
                     <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0284c7; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
                         <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 SÖRVEYÖRÜN YAPMASI GEREKENLER & KONTROL NOKTALARI</p>
-                        <p style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
-                            {selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.')}
-                        </p>
+                        <div style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
+                            {format_recommendations(selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.'))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1379,9 +1385,9 @@ elif page == "📋 Sörveyör Denetim Rehberi":
                     </div>
                     <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0284c7; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
                         <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 SÖRVEYÖRÜN YAPMASI GEREKENLER & KONTROL NOKTALARI</p>
-                        <p style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
-                            {selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.')}
-                        </p>
+                        <div style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
+                            {format_recommendations(selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.'))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1465,9 +1471,14 @@ elif page == "🌐 Canlı Bayrak Siteleri":
     st.markdown('<p style="color:#64748b;font-size:0.95rem;margin-bottom:15px;">Bayrakların resmi sitelerine bağlanarak yeni yayınlanan sirküler dosyası olup olmadığını yerel veritabanınızla karşılaştırarak denetleyin.</p>', unsafe_allow_html=True)
     
     if st.button("🔌 Sitelere Bağlan ve Yeni Yayınları Tara", type="primary"):
-        import requests
-        from bs4 import BeautifulSoup
-        
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+        except ModuleNotFoundError:
+            st.error("⚠️ Canlı güncelleme takibi yapmak için gerekli 'beautifulsoup4' kütüphanesi sisteminizde bulunamadı.")
+            st.info("💡 Lütfen terminalden/komut satırından 'pip install beautifulsoup4' komutunu çalıştırın ve sayfayı yenileyin.")
+            st.stop()
+            
         status_placeholder = st.empty()
         status_placeholder.info("🔄 Resmi web sitelerine bağlanılıyor, lütfen bekleyin...")
         
