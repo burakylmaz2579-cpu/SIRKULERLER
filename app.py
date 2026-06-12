@@ -4,6 +4,15 @@ import streamlit as st
 import pandas as pd
 import hashlib
 import textwrap
+import re
+
+# Initialize session state for unified filters
+if "selected_flag" not in st.session_state:
+    st.session_state["selected_flag"] = "Tümü"
+if "selected_cat" not in st.session_state:
+    st.session_state["selected_cat"] = "Tümü"
+if "search_query" not in st.session_state:
+    st.session_state["search_query"] = ""
 
 # Set page config
 st.set_page_config(
@@ -610,7 +619,7 @@ st.sidebar.markdown(f'<h2 style="color:#0369a1;font-size:1.4rem;margin-bottom:15
 # Page Navigation
 page = st.sidebar.radio(
     "Görünüm Seçin",
-    ["📊 Dashboard & Arama", "📋 Bayrak Kontrol Listeleri", "🌐 Canlı Bayrak Siteleri"]
+    ["📊 Dashboard & Arama", "📋 Bayrak Kontrol Listeleri", "📋 Sörveyör Denetim Rehberi", "🌐 Canlı Bayrak Siteleri"]
 )
 
 # Shared Filters in Sidebar
@@ -619,7 +628,7 @@ st.sidebar.markdown('<p style="color:#64748b;font-size:0.85rem;font-weight:600;t
 
 if not df_circulars.empty:
     all_flags = ["Tümü"] + sorted(list(df_circulars['Flag'].unique()))
-    selected_flag = st.sidebar.selectbox("Bayrak Devleti", all_flags)
+    selected_flag = st.sidebar.selectbox("Bayrak Devleti", all_flags, key="selected_flag")
     
     unique_cats = set()
     for cat_str in df_circulars['Category'].dropna().unique():
@@ -628,9 +637,9 @@ if not df_circulars.empty:
             if c_clean:
                 unique_cats.add(c_clean)
     all_categories = ["Tümü"] + sorted(list(unique_cats))
-    selected_cat = st.sidebar.selectbox("Sertifika / Konu Kategorisi", all_categories)
+    selected_cat = st.sidebar.selectbox("Sertifika / Konu Kategorisi", all_categories, key="selected_cat")
     
-    search_query = st.sidebar.text_input("Anahtar Kelime Ara (TR / EN)", "")
+    search_query = st.sidebar.text_input("Anahtar Kelime Ara (TR / EN)", key="search_query")
 else:
     selected_flag = "Tümü"
     selected_cat = "Tümü"
@@ -673,43 +682,102 @@ if page == "📊 Dashboard & Arama":
             filtered_df['Recommendations_TR'].str.lower().str.contains(query)
         ]
         
-    # KPI metrics row
-    total_circs = len(df_circulars)
+    # Flag-filtered dataframe for counts
+    flag_filtered_df = df_circulars.copy()
+    if selected_flag != "Tümü":
+        flag_filtered_df = flag_filtered_df[flag_filtered_df['Flag'] == selected_flag]
+        
+    total_circs = len(flag_filtered_df)
     filtered_circs_count = len(filtered_df)
     
-    ism_count = len(df_circulars[df_circulars['Category'].apply(lambda x: 'ism' in str(x).lower() or 'smc' in str(x).lower())])
-    mlc_count = len(df_circulars[df_circulars['Category'].apply(lambda x: 'mlc' in str(x).lower())])
-    isps_count = len(df_circulars[df_circulars['Category'].apply(lambda x: 'isps' in str(x).lower() or 'issc' in str(x).lower())])
-    stat_count = len(df_circulars[df_circulars['Category'].apply(lambda x: 'statüter' in str(x).lower() or 'donanım' in str(x).lower() or 'exemption' in str(x).lower() or 'bwm' in str(x).lower())])
+    ism_count = len(flag_filtered_df[flag_filtered_df['Category'].apply(lambda x: 'ism' in str(x).lower() or 'smc' in str(x).lower())])
+    mlc_count = len(flag_filtered_df[flag_filtered_df['Category'].apply(lambda x: 'mlc' in str(x).lower())])
+    isps_count = len(flag_filtered_df[flag_filtered_df['Category'].apply(lambda x: 'isps' in str(x).lower() or 'issc' in str(x).lower())])
+    stat_count = len(flag_filtered_df[flag_filtered_df['Category'].apply(lambda x: 'statüter' in str(x).lower() or 'donanım' in str(x).lower() or 'exemption' in str(x).lower() or 'bwm' in str(x).lower())])
     
-    st.markdown(f"""
-    <div class="metric-container">
-        <div class="metric-box">
-            <div class="metric-val">{total_circs}</div>
-            <div class="metric-lbl">Toplam Sirküler</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-val" style="color: #0284c7;">{filtered_circs_count}</div>
-            <div class="metric-lbl">Filtrelenmiş</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-val" style="color: #db2777;">{ism_count}</div>
-            <div class="metric-lbl">ISM / SMC</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-val" style="color: #7c3aed;">{isps_count}</div>
-            <div class="metric-lbl">ISPS / ISSC</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-val" style="color: #0891b2;">{mlc_count}</div>
-            <div class="metric-lbl">MLC 2006</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-val" style="color: #059669;">{stat_count}</div>
-            <div class="metric-lbl">Statüter / Ekipman</div>
-        </div>
-    </div>
+    # Custom Styling for KPI Buttons to look like Metrics
+    st.markdown("""
+    <style>
+        div[data-testid="stColumn"] button {
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px 5px !important;
+            width: 100% !important;
+            min-height: 95px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+            transition: all 0.2s ease-in-out !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            color: #64748b !important;
+            font-size: 0.8rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+        }
+        div[data-testid="stColumn"] button:hover {
+            background-color: #f0f9ff !important;
+            border-color: #bae6fd !important;
+            box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.08) !important;
+            transform: translateY(-1px) !important;
+        }
+        div[data-testid="stColumn"] button p {
+            margin: 0 !important;
+            line-height: 1.3 !important;
+            text-align: center !important;
+        }
+        div[data-testid="stColumn"] button strong {
+            font-size: 1.7rem !important;
+            display: block !important;
+            margin-bottom: 3px !important;
+            font-weight: 700 !important;
+        }
+        /* Custom Colors for KPI metrics */
+        div[data-testid="stColumn"]:nth-child(1) button strong { color: #0284c7 !important; }
+        div[data-testid="stColumn"]:nth-child(2) button strong { color: #0284c7 !important; }
+        div[data-testid="stColumn"]:nth-child(3) button strong { color: #db2777 !important; }
+        div[data-testid="stColumn"]:nth-child(4) button strong { color: #7c3aed !important; }
+        div[data-testid="stColumn"]:nth-child(5) button strong { color: #0891b2 !important; }
+        div[data-testid="stColumn"]:nth-child(6) button strong { color: #059669 !important; }
+    </style>
     """, unsafe_allow_html=True)
+    
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    with col1:
+        if st.button(f"**{total_circs}**\n\nToplam Sirküler", key="btn_total_circs"):
+            st.session_state["selected_flag"] = "Tümü"
+            st.session_state["selected_cat"] = "Tümü"
+            st.session_state["search_query"] = ""
+            st.rerun()
+    with col2:
+        if st.button(f"**{filtered_circs_count}**\n\nFiltrelenmiş", key="btn_filtered_circs"):
+            st.session_state["selected_cat"] = "Tümü"
+            st.session_state["search_query"] = ""
+            st.rerun()
+    with col3:
+        if st.button(f"**{ism_count}**\n\nISM / SMC", key="btn_ism_count"):
+            st.session_state["selected_cat"] = "SMC / ISM"
+            st.session_state["search_query"] = ""
+            st.rerun()
+    with col4:
+        if st.button(f"**{isps_count}**\n\nISPS / ISSC", key="btn_isps_count"):
+            st.session_state["selected_cat"] = "ISSC / ISPS"
+            st.session_state["search_query"] = ""
+            st.rerun()
+    with col5:
+        if st.button(f"**{mlc_count}**\n\nMLC 2006", key="btn_mlc_count"):
+            st.session_state["selected_cat"] = "MLC"
+            st.session_state["search_query"] = ""
+            st.rerun()
+    with col6:
+        if st.button(f"**{stat_count}**\n\nStatüter / Ekipman", key="btn_stat_count"):
+            st.session_state["selected_cat"] = "Statüter / Donanım"
+            st.session_state["search_query"] = ""
+            st.rerun()
     
     st.markdown('<h3 class="gradient-subheader" style="margin-top:0;">🔍 Arama Sonuçları</h3>', unsafe_allow_html=True)
     
@@ -718,7 +786,20 @@ if page == "📊 Dashboard & Arama":
     else:
         # Helper function for rendering flag section
         def render_flag_section(flag_df, flag_name):
-            st.dataframe(
+            state_key = f"selected_fname_{flag_name}"
+            doc_options = flag_df['Filename'].tolist()
+            
+            if not doc_options:
+                st.info("Kriterlere uyan sirküler bulunamadı.")
+                return
+                
+            if state_key not in st.session_state:
+                st.session_state[state_key] = doc_options[0]
+            elif st.session_state[state_key] not in doc_options:
+                st.session_state[state_key] = doc_options[0]
+                
+            # Render dataframe with row selection enabled
+            selection = st.dataframe(
                 flag_df[['Category', 'Subject_TR', 'References', 'Filename']],
                 use_container_width=True,
                 column_config={
@@ -727,13 +808,22 @@ if page == "📊 Dashboard & Arama":
                     "References": st.column_config.TextColumn("Kural Dayanağı"),
                     "Filename": st.column_config.TextColumn("Dosya Adı")
                 },
+                on_select="rerun",
+                selection_mode="single-row",
                 key=f"df_{flag_name}"
             )
+            
+            # If a row was selected in the table, update the session state
+            selected_rows = selection.selection.rows
+            if selected_rows:
+                clicked_fname = flag_df.iloc[selected_rows[0]]['Filename']
+                if clicked_fname != st.session_state[state_key]:
+                    st.session_state[state_key] = clicked_fname
+                    st.rerun()
             
             st.markdown("---")
             st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
             
-            doc_options = flag_df['Filename'].tolist()
             def get_option_label(fname):
                 rows = flag_df[flag_df['Filename'] == fname]
                 if not rows.empty:
@@ -741,18 +831,28 @@ if page == "📊 Dashboard & Arama":
                     return f"{subj if subj else fname}"
                 return fname
                 
+            try:
+                default_idx = doc_options.index(st.session_state[state_key])
+            except ValueError:
+                default_idx = 0
+                
             selected_fname = st.selectbox(
                 f"Detaylarını görmek, tavsiyeleri okumak ve indirmek istediğiniz {flag_name} sirkülerini seçin:",
                 options=doc_options,
                 format_func=get_option_label,
+                index=default_idx,
                 key=f"selected_doc_details_{flag_name}"
             )
+            
+            if selected_fname != st.session_state[state_key]:
+                st.session_state[state_key] = selected_fname
+                st.rerun()
             
             if selected_fname:
                 selected_row = flag_df[flag_df['Filename'] == selected_fname].iloc[0]
                 pdf_file_path = get_pdf_file_path(selected_row)
                 
-                card_html = f"""
+                card_html = textwrap.dedent(f"""
                 <div class="glass-card" style="border-left: 5px solid #0284c7; background: #ffffff;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <span style="font-size:1.3rem; font-weight:700; color:#0369a1;">{selected_row['Subject_TR'] if selected_row['Subject_TR'] else selected_row['Subject_EN']}</span>
@@ -783,7 +883,7 @@ if page == "📊 Dashboard & Arama":
                         </div>
                     </div>
                 </div>
-                """
+                """)
                 st.markdown(card_html, unsafe_allow_html=True)
                 
                 col1, col2, col3 = st.columns([3, 3, 6])
@@ -1015,7 +1115,7 @@ elif page == "📋 Bayrak Kontrol Listeleri":
     if flag_circs.empty:
         st.info("Bu bayrağa ait veri tabanında taranmış sirküler bulunmamaktadır.")
     else:
-        st.dataframe(
+        selection_p2 = st.dataframe(
             flag_circs[['Filename', 'Category', 'Subject_TR', 'References']],
             use_container_width=True,
             column_config={
@@ -1023,10 +1123,284 @@ elif page == "📋 Bayrak Kontrol Listeleri":
                 "Category": st.column_config.TextColumn("Kategori"),
                 "Subject_TR": st.column_config.TextColumn("Konu (Türkçe)"),
                 "References": st.column_config.TextColumn("Kural Dayanağı")
-            }
+            },
+            on_select="rerun",
+            selection_mode="single-row",
+            key=f"df_p2_{selected_guide_flag}"
         )
+        
+        selected_p2_rows = selection_p2.selection.rows
+        if selected_p2_rows:
+            selected_row = flag_circs.iloc[selected_p2_rows[0]]
+            pdf_file_path = get_pdf_file_path(selected_row)
+            
+            st.markdown("---")
+            st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Seçilen Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
+            
+            card_html = textwrap.dedent(f"""
+            <div class="glass-card" style="border-left: 5px solid #0284c7; background: #ffffff;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:1.3rem; font-weight:700; color:#0369a1;">{selected_row['Subject_TR'] if selected_row['Subject_TR'] else selected_row['Subject_EN']}</span>
+                    <div>
+                        <span class="badge badge-flag" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Flag']}</span>
+                        <span class="badge badge-cat" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Category']}</span>
+                    </div>
+                </div>
+                <p style="margin-bottom:12px; font-size:0.9rem; color:#64748b;">
+                    <b>Dosya Adı:</b> {selected_row['Filename']} | 
+                    <b>Referanslar / Kural Dayanağı:</b> {selected_row['References'] if selected_row['References'] else 'Belirtilmedi'}
+                </p>
+                <hr style="border-color:#e2e8f0; margin:15px 0;"/>
+                
+                <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:25px; font-size:0.95rem;">
+                    <div>
+                        <p style="color:#be185d; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Özet (TÜRKÇE)</p>
+                        <p style="color:#334155; line-height:1.5; margin-bottom:15px;">{selected_row['Summary_TR'] if selected_row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
+                        
+                        <p style="color:#0369a1; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Summary (ENGLISH)</p>
+                        <p style="color:#334155; line-height:1.5;">{selected_row['Summary_EN'] if selected_row['Summary_EN'] else 'No English summary available.'}</p>
+                    </div>
+                    <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
+                        <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 YAPILMASI GEREKENLER / TAVSİYELER</p>
+                        <p style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
+                            {selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.')}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            """)
+            st.markdown(card_html, unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns([3, 3, 6])
+            with col1:
+                if pdf_file_path:
+                    try:
+                        with open(pdf_file_path, "rb") as f:
+                            pdf_bytes = f.read()
+                        st.download_button(
+                            label="📄 PDF İndir",
+                            data=pdf_bytes,
+                            file_name=selected_row['Filename'],
+                            mime="application/pdf",
+                            key=f"download_pdf_p2_{selected_guide_flag}_{selected_row['Filename']}"
+                        )
+                    except Exception as e:
+                        st.caption(f"⚠️ Dosya okunamadı: {str(e)}")
+                else:
+                    st.button("❌ PDF Bulunamadı", disabled=True, key=f"download_err_p2_{selected_guide_flag}_{selected_row['Filename']}")
+            with col2:
+                flag_cfg = FLAG_GUIDES.get(selected_row['Flag'])
+                if flag_cfg:
+                    st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank" style="text-decoration:none;"><button style="padding:4px 12px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.9rem; height:38px; cursor:pointer; width:100%;">🌐 Bayrak Resmi Sitesine Git</button></a>', unsafe_allow_html=True)
 
-# PAGE 3: FLAG OFFICIAL WEBSITES
+# PAGE 3: SURVEYOR AUDIT GUIDE (Sörveyör Denetim Rehberi)
+elif page == "📋 Sörveyör Denetim Rehberi":
+    st.markdown('<h1 class="gradient-text gradient-header">📋 Sörveyör Denetim Rehberi</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b;font-size:1.1rem;margin-bottom:25px;">Sörveyörlerin denetim sırasında gemilerde ve bayrak özelinde kontrol etmesi gereken maddeler ve ilgili sirküler dosyaları.</p>', unsafe_allow_html=True)
+    
+    flags_with_guides = list(FLAG_GUIDES.keys())
+    
+    col_flag, col_audit = st.columns(2)
+    with col_flag:
+        selected_guide_flag = st.selectbox(
+            "Gemi Bayrağını Seçin (Select Vessel Flag):", 
+            flags_with_guides,
+            index=0,
+            key="surveyor_guide_flag"
+        )
+    
+    guide = FLAG_GUIDES[selected_guide_flag]
+    audit_types = list(guide['checklists'].keys())
+    
+    with col_audit:
+        selected_audit = st.selectbox(
+            "Denetim Türünü Seçin (Select Audit Type):",
+            audit_types,
+            index=0,
+            key="surveyor_guide_audit"
+        )
+        
+    st.markdown("---")
+    
+    # Guide Flag Header Card
+    st.markdown(textwrap.dedent(f"""
+    <div class="glass-card" style="border-left: 5px solid #be185d; background: #ffffff;">
+        <h3 style="margin:0 0 5px 0; color:#be185d;">{selected_guide_flag} Bayrağı - {selected_audit} Denetim Rehberi</h3>
+        <p style="margin-bottom:10px; font-size:1.05rem; color:#334155;">{guide['description']}</p>
+        <p style="margin:0; font-size:0.9rem; color:#64748b;"> Resmi Circular Portalı: <a href="{guide['portal_url']}" target="_blank" style="color:#0284c7;text-decoration:none;font-weight:600;">{guide['portal_url']} ↗</a></p>
+    </div>
+    """), unsafe_allow_html=True)
+    
+    # Display Checklist items
+    items = guide['checklists'][selected_audit]
+    
+    st.markdown('<h4 style="color:#0369a1; font-weight:600;">📝 Kontrol Maddeleri ve Referans Sirkülerler</h4>', unsafe_allow_html=True)
+    
+    for idx, item in enumerate(items):
+        # Find referenced circulars
+        ref_circs = []
+        codes = re.findall(r'\b(MMC-\d+|MC-\d+|MC\d+|Circular\s*\d+|MARCIR-\d+-\d+)\b', item, re.IGNORECASE)
+        flag_circs = df_circulars[df_circulars['Flag'] == selected_guide_flag]
+        
+        for code in codes:
+            cleaned_code = re.sub(r'[\s\-_]', '', code).lower()
+            for c_idx, row in flag_circs.iterrows():
+                fname = str(row['Filename']).lower()
+                subject = str(row['Subject_EN']).lower() + " " + str(row['Subject_TR']).lower()
+                ref = str(row['References']).lower()
+                
+                clean_fname = re.sub(r'[\s\-_]', '', fname)
+                clean_subj = re.sub(r'[\s\-_]', '', subject)
+                clean_ref = re.sub(r'[\s\-_]', '', ref)
+                
+                if cleaned_code in clean_fname or cleaned_code in clean_subj or cleaned_code in clean_ref:
+                    ref_circs.append(row)
+                    
+        # Remove duplicates
+        seen = set()
+        unique_circs = []
+        for r in ref_circs:
+            if r['Filename'] not in seen:
+                seen.add(r['Filename'])
+                unique_circs.append(r)
+                
+        # Render item
+        st.markdown(textwrap.dedent(f"""
+        <div style="background:#ffffff; border-left:4px solid #0284c7; border-radius:0 6px 6px 0; padding:15px; margin-bottom:15px; font-size:1rem; line-height:1.5; color:#1e293b; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+            {item}
+        </div>
+        """), unsafe_allow_html=True)
+        
+        # If there are matched circulars, display download buttons and info
+        if unique_circs:
+            st.markdown("<p style='font-size:0.85rem; color:#64748b; font-weight:600; margin-left:15px; margin-top:-5px;'>🔗 Referans Genelgeler (Referenced Circulars):</p>", unsafe_allow_html=True)
+            for c_idx, row in enumerate(unique_circs):
+                pdf_file_path = get_pdf_file_path(row)
+                
+                col_btn, col_info = st.columns([3, 9])
+                with col_btn:
+                    if pdf_file_path:
+                        try:
+                            with open(pdf_file_path, "rb") as f:
+                                pdf_bytes = f.read()
+                            st.download_button(
+                                label=f"📥 {row['Filename'][:25]}...",
+                                data=pdf_bytes,
+                                file_name=row['Filename'],
+                                mime="application/pdf",
+                                key=f"guide_dl_{idx}_{c_idx}_{selected_guide_flag}"
+                            )
+                        except Exception as e:
+                            st.caption(f"⚠️ Hata: {str(e)}")
+                    else:
+                        st.button(f"❌ PDF Bulunamadı ({row['Filename'][:15]}...)", key=f"guide_dl_err_{idx}_{c_idx}_{selected_guide_flag}", disabled=True)
+                with col_info:
+                    st.markdown(textwrap.dedent(f"""
+                    <div style="font-size:0.9rem; padding:5px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; min-height:38px; display:flex; align-items:center;">
+                        <span style="font-weight:600; color:#0369a1; margin-right:8px;">Konu:</span>
+                        <span style="color:#334155;">{row['Subject_TR'] if row['Subject_TR'] else row['Subject_EN']}</span>
+                    </div>
+                    """), unsafe_allow_html=True)
+            st.markdown("<div style='margin-bottom:20px;'></div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown(f'<h4 style="color:#0369a1; font-weight:600;">📂 {selected_guide_flag} Bayrağı Altındaki Tüm {selected_audit} Genelgeleri</h4>', unsafe_allow_html=True)
+    
+    # Filter the circular database for this flag and category
+    cat_mask = pd.Series([True] * len(df_circulars))
+    audit_lower = selected_audit.lower()
+    if 'ism' in audit_lower or 'smc' in audit_lower:
+        cat_mask = df_circulars['Category'].apply(lambda x: 'ism' in str(x).lower() or 'smc' in str(x).lower())
+    elif 'isps' in audit_lower or 'issc' in audit_lower:
+        cat_mask = df_circulars['Category'].apply(lambda x: 'isps' in str(x).lower() or 'issc' in str(x).lower())
+    elif 'mlc' in audit_lower:
+        cat_mask = df_circulars['Category'].apply(lambda x: 'mlc' in str(x).lower())
+    elif 'statüter' in audit_lower or 'donanım' in audit_lower or 'ekipman' in audit_lower:
+        cat_mask = df_circulars['Category'].apply(lambda x: 'statüter' in str(x).lower() or 'donanım' in str(x).lower() or 'exemption' in str(x).lower() or 'bwm' in str(x).lower())
+        
+    audit_circs = df_circulars[(df_circulars['Flag'] == selected_guide_flag) & cat_mask]
+    
+    if audit_circs.empty:
+        st.info("Bu kategoriye ait sirküler bulunamadı.")
+    else:
+        selection_audit = st.dataframe(
+            audit_circs[['Filename', 'Subject_TR', 'References']],
+            use_container_width=True,
+            column_config={
+                "Filename": st.column_config.TextColumn("Dosya Adı"),
+                "Subject_TR": st.column_config.TextColumn("Konu (Türkçe)"),
+                "References": st.column_config.TextColumn("Kural Dayanağı")
+            },
+            on_select="rerun",
+            selection_mode="single-row",
+            key=f"df_audit_guide_{selected_guide_flag}_{selected_audit.replace(' ', '_').replace('/', '_')}"
+        )
+        
+        selected_audit_rows = selection_audit.selection.rows
+        if selected_audit_rows:
+            selected_row = audit_circs.iloc[selected_audit_rows[0]]
+            pdf_file_path = get_pdf_file_path(selected_row)
+            
+            st.markdown("---")
+            st.markdown('<h4 style="color:#0369a1; font-weight:600;">📄 Seçilen Sirküler Detayı, Yapılması Gerekenler & İndirme Paneli</h4>', unsafe_allow_html=True)
+            
+            card_html = textwrap.dedent(f"""
+            <div class="glass-card" style="border-left: 5px solid #0284c7; background: #ffffff;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:1.3rem; font-weight:700; color:#0369a1;">{selected_row['Subject_TR'] if selected_row['Subject_TR'] else selected_row['Subject_EN']}</span>
+                    <div>
+                        <span class="badge badge-flag" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Flag']}</span>
+                        <span class="badge badge-cat" style="font-size:0.8rem; padding:6px 12px;">{selected_row['Category']}</span>
+                    </div>
+                </div>
+                <p style="margin-bottom:12px; font-size:0.9rem; color:#64748b;">
+                    <b>Dosya Adı:</b> {selected_row['Filename']} | 
+                    <b>Referanslar / Kural Dayanağı:</b> {selected_row['References'] if selected_row['References'] else 'Belirtilmedi'}
+                </p>
+                <hr style="border-color:#e2e8f0; margin:15px 0;"/>
+                
+                <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:25px; font-size:0.95rem;">
+                    <div>
+                        <p style="color:#be185d; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Özet (TÜRKÇE)</p>
+                        <p style="color:#334155; line-height:1.5; margin-bottom:15px;">{selected_row['Summary_TR'] if selected_row['Summary_TR'] else 'Türkçe özet bulunmamaktadır.'}</p>
+                        
+                        <p style="color:#0369a1; font-weight:700; margin-bottom:6px; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Summary (ENGLISH)</p>
+                        <p style="color:#334155; line-height:1.5;">{selected_row['Summary_EN'] if selected_row['Summary_EN'] else 'No English summary available.'}</p>
+                    </div>
+                    <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 18px; box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.02);">
+                        <p style="color:#0369a1; font-weight:700; margin-bottom:8px; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.5px;">📋 YAPILMASI GEREKENLER / TAVSİYELER</p>
+                        <p style="color:#1e293b; line-height:1.6; font-size:0.95rem; font-weight:500;">
+                            {selected_row.get('Recommendations_TR', 'İlgili sirküler belgesini gemideki klasöre ekleyin ve gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin.')}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            """)
+            st.markdown(card_html, unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns([3, 3, 6])
+            with col1:
+                if pdf_file_path:
+                    try:
+                        with open(pdf_file_path, "rb") as f:
+                            pdf_bytes = f.read()
+                        st.download_button(
+                            label="📄 PDF İndir",
+                            data=pdf_bytes,
+                            file_name=selected_row['Filename'],
+                            mime="application/pdf",
+                            key=f"download_pdf_guide_{selected_guide_flag}_{selected_row['Filename']}"
+                        )
+                    except Exception as e:
+                        st.caption(f"⚠️ Hata: {str(e)}")
+                else:
+                    st.button("❌ PDF Bulunamadı", disabled=True, key=f"download_err_guide_{selected_guide_flag}_{selected_row['Filename']}")
+            with col2:
+                flag_cfg = FLAG_GUIDES.get(selected_row['Flag'])
+                if flag_cfg:
+                    st.markdown(f'<a href="{flag_cfg["portal_url"]}" target="_blank" style="text-decoration:none;"><button style="padding:4px 12px; border-radius:4px; border:1px solid #cbd5e1; background:transparent; color:#475569; font-size:0.9rem; height:38px; cursor:pointer; width:100%;">🌐 Bayrak Resmi Sitesine Git</button></a>', unsafe_allow_html=True)
+
+# PAGE 4: FLAG OFFICIAL WEBSITES
 elif page == "🌐 Canlı Bayrak Siteleri":
     st.markdown('<h1 class="gradient-text gradient-header">🌐 Canlı Bayrak Devletleri Sirküler Portalları</h1>', unsafe_allow_html=True)
     st.markdown('<p style="color:#64748b;font-size:1.1rem;margin-bottom:20px;">En güncel sirküler, form ve mevzuat değişikliklerini teyit etmek için bayrakların resmi web sitelerini ziyaret edebilirsiniz.</p>', unsafe_allow_html=True)
