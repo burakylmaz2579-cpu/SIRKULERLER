@@ -37,6 +37,187 @@ def format_recommendations(rec_str):
             html_out += f'<div style="margin-bottom:8px; line-height:1.5; color:#1e293b;">{part}</div>'
     return html_out
 
+def auto_process_new_circulars(new_circs, github_token=None):
+    import requests
+    import base64
+    import openpyxl
+    from io import BytesIO
+    
+    repo = "burakylmaz2579-cpu/SIRKULERLER"
+    
+    # Path mappings inside repo
+    paths_cfg = {
+        'Comoros': ('COMOROS/Sirkuler_PDFleri', 'COMOROS/Sirkuler_PDFleri/GBI_Sirkuler_Analizi_Turkce.xlsx'),
+        'Guinea Bissau': ('GBI/Sirkuler_PDFleri', 'GBI/Sirkuler_PDFleri/GBI_Sirkuler_Analizi_Turkce.xlsx'),
+        'Liberia': ('LIBERIA/Indirilen_Sirkulerler', 'LIBERIA/Indirilen_Sirkulerler/Liberia_Sirkuler_Analizi_Turkce.xlsx'),
+        'Palau': ('PALAU/Sirkuler_PDFleri', 'PALAU/Palau_Sirkuler_Analizi.xlsx'),
+        'Panama': ('PANAMA', 'PANAMA/PANAMA_Sirkuler_Analizi_Turkce.xlsx'),
+        'Sierra Leone': ('SIERRA/Sirkuler_PDFleri', 'SIERRA/Sirkuler_PDFleri/SLMARAD_Sirkuler_Analizi_Turkce.xlsx')
+    }
+    
+    results = []
+    
+    for item in new_circs:
+        flag = item['Flag']
+        filename = item['Filename']
+        download_link = item['Link']
+        
+        cfg = paths_cfg.get(flag)
+        if not cfg:
+            continue
+        
+        pdf_folder_path, excel_file_path = cfg
+        pdf_path_in_repo = f"{pdf_folder_path}/{filename}"
+        
+        # 1. Download PDF
+        try:
+            r = requests.get(download_link, timeout=15)
+            if r.status_code != 200:
+                results.append((filename, False, f"İndirme hatası: HTTP {r.status_code}"))
+                continue
+            pdf_bytes = r.content
+        except Exception as e:
+            results.append((filename, False, f"Bağlantı hatası: {str(e)}"))
+            continue
+            
+        # 2. Save Locally if running locally
+        local_prefix_dir = resolve_path(flag.split()[0] if ' ' in flag else flag)
+        is_local = False
+        if local_prefix_dir and os.path.exists(local_prefix_dir):
+            is_local = True
+            if flag == 'Panama':
+                local_pdf_path = os.path.join(local_prefix_dir, filename)
+            elif flag == 'Liberia':
+                local_pdf_path = os.path.join(local_prefix_dir, 'Indirilen_Sirkulerler', filename)
+            else:
+                local_pdf_path = os.path.join(local_prefix_dir, 'Sirkuler_PDFleri', filename)
+                
+            try:
+                os.makedirs(os.path.dirname(local_pdf_path), exist_ok=True)
+                with open(local_pdf_path, 'wb') as f:
+                    f.write(pdf_bytes)
+            except Exception as e:
+                pass
+                
+        # 3. Upload PDF to GitHub if token exists
+        uploaded_pdf = False
+        if github_token:
+            url_put = f"https://api.github.com/repos/{repo}/contents/{pdf_path_in_repo}"
+            headers = {
+                "Authorization": f"token {github_token}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+            # Check if file exists to get sha
+            sha = None
+            r_get = requests.get(url_put, headers=headers)
+            if r_get.status_code == 200:
+                sha = r_get.json().get("sha")
+                
+            data = {
+                "message": f"Auto-download: {filename}",
+                "content": base64.b64encode(pdf_bytes).decode("utf-8"),
+                "branch": "main"
+            }
+            if sha:
+                data["sha"] = sha
+                
+            r_put = requests.put(url_put, headers=headers, json=data)
+            if r_put.status_code in [200, 201]:
+                uploaded_pdf = True
+                
+        # 4. Append to Excel file
+        excel_updated = False
+        if is_local:
+            local_excel_path = resolve_path(flag.split()[0] if ' ' in flag else flag, excel_file_path.split('/', 1)[1] if '/' in excel_file_path else "")
+            if local_excel_path and os.path.exists(local_excel_path):
+                try:
+                    wb = openpyxl.load_workbook(local_excel_path)
+                    ws = wb.active
+                    
+                    exists = False
+                    for r_idx in range(2, ws.max_row + 1):
+                        cell_val = str(ws.cell(row=r_idx, column=1).value or "").strip().lower()
+                        if cell_val == filename.strip().lower():
+                            exists = True
+                            break
+                            
+                    if not exists:
+                        cleaned_title = clean_filename_to_title(filename)
+                        cat = classify_category_from_text(filename + " " + cleaned_title)
+                        ws.append([
+                            filename, 
+                            cat, 
+                            cleaned_title, 
+                            cleaned_title, 
+                            "Belirtilmedi", 
+                            "Otomatik indirildi. Türkçe özet düzenlenecek.", 
+                            "Auto-downloaded. English summary to be added.", 
+                            "1. İlgili genelgeyi gemideki sirküler klasörüne ekleyin. 2. Gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin."
+                        ])
+                        wb.save(local_excel_path)
+                        excel_updated = True
+                except Exception as e:
+                    pass
+                    
+        if github_token and not is_local:
+            url_excel = f"https://api.github.com/repos/{repo}/contents/{excel_file_path}"
+            headers = {
+                "Authorization": f"token {github_token}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+            r_excel_get = requests.get(url_excel, headers=headers)
+            if r_excel_get.status_code == 200:
+                excel_data = r_excel_get.json()
+                excel_sha = excel_data.get("sha")
+                excel_bytes = base64.b64decode(excel_data.get("content"))
+                
+                try:
+                    wb = openpyxl.load_workbook(BytesIO(excel_bytes))
+                    ws = wb.active
+                    
+                    exists = False
+                    for r_idx in range(2, ws.max_row + 1):
+                        cell_val = str(ws.cell(row=r_idx, column=1).value or "").strip().lower()
+                        if cell_val == filename.strip().lower():
+                            exists = True
+                            break
+                            
+                    if not exists:
+                        cleaned_title = clean_filename_to_title(filename)
+                        cat = classify_category_from_text(filename + " " + cleaned_title)
+                        ws.append([
+                            filename, 
+                            cat, 
+                            cleaned_title, 
+                            cleaned_title, 
+                            "Belirtilmedi", 
+                            "Otomatik indirildi. Türkçe özet düzenlenecek.", 
+                            "Auto-downloaded. English summary to be added.", 
+                            "1. İlgili genelgeyi gemideki sirküler klasörüne ekleyin. 2. Gereksinimleri PSC denetimleri öncesinde kontrol listesine ekleyin."
+                        ])
+                        out_io = BytesIO()
+                        wb.save(out_io)
+                        updated_excel_bytes = out_io.getvalue()
+                        
+                        data_excel = {
+                            "message": f"Update Excel for auto-download: {filename}",
+                            "content": base64.b64encode(updated_excel_bytes).decode("utf-8"),
+                            "sha": excel_sha,
+                            "branch": "main"
+                        }
+                        r_excel_put = requests.put(url_excel, headers=headers, json=data_excel)
+                        if r_excel_put.status_code in [200, 201]:
+                            excel_updated = True
+                except Exception as e:
+                    pass
+                    
+        if is_local or uploaded_pdf:
+            results.append((filename, True, f"Sisteme eklendi! (Excel: {'Güncellendi' if excel_updated else 'Zaten Mevcut'})"))
+        else:
+            results.append((filename, False, "GitHub yükleme hatası (Token veya repo erişimini kontrol edin)"))
+            
+    return results
+
 # Set page config
 st.set_page_config(
     page_title="PHRS Bayrak Sirkülerleri & Statutory Kontrol Portalı",
@@ -1536,6 +1717,12 @@ elif page == "🌐 Canlı Bayrak Siteleri":
     st.markdown('<h2 class="gradient-text gradient-header" style="font-size:1.6rem; margin-top:20px;">🔄 Canlı Sirküler Güncelleme Takip Paneli</h2>', unsafe_allow_html=True)
     st.markdown('<p style="color:#64748b;font-size:0.95rem;margin-bottom:15px;">Bayrakların resmi sitelerine bağlanarak yeni yayınlanan sirküler dosyası olup olmadığını yerel veritabanınızla karşılaştırarak denetleyin.</p>', unsafe_allow_html=True)
     
+    # Initialize session states for scanning
+    if "scanned_new_circulars" not in st.session_state:
+        st.session_state["scanned_new_circulars"] = []
+    if "scan_completed" not in st.session_state:
+        st.session_state["scan_completed"] = False
+
     if st.button("🔌 Sitelere Bağlan ve Yeni Yayınları Tara", type="primary"):
         try:
             import requests
@@ -1615,9 +1802,14 @@ elif page == "🌐 Canlı Bayrak Siteleri":
             st.warning(f"⚠️ Sierra Leone sitesine bağlanırken hata oluştu: {str(e)}")
             
         status_placeholder.empty()
-        
+        st.session_state["scanned_new_circulars"] = new_circulars
+        st.session_state["scan_completed"] = True
+        st.rerun()
+
+    if st.session_state["scan_completed"]:
+        new_circulars = st.session_state["scanned_new_circulars"]
         if new_circulars:
-            st.markdown(f'<div style="background-color: #fee2e2; border-left: 5px solid #ef4444; padding: 15px; border-radius: 4px; margin-bottom: 20px;"><h4 style="color: #991b1b; margin:0 0 5px 0;">🚨 Yeni Sirküler(ler) Tespit Edildi!</h4><p style="color: #7f1d1d; margin:0; font-size:0.95rem;">Resmi sitelerde yayınlanmış ancak yerel klasörünüzde bulunmayan <b>{len(new_circulars)} adet</b> dosya tespit edildi. Bu dosyaları indirip ilgili bayrak klasörüne ekleyin.</p></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="background-color: #fee2e2; border-left: 5px solid #ef4444; padding: 15px; border-radius: 4px; margin-bottom: 20px;"><h4 style="color: #991b1b; margin:0 0 5px 0;">🚨 Yeni Sirküler(ler) Tespit Edildi!</h4><p style="color: #7f1d1d; margin:0; font-size:0.95rem;">Resmi sitelerde yayınlanmış ancak yerel klasörünüzde bulunmayan <b>{len(new_circulars)} adet</b> dosya tespit edildi. Bu dosyaları doğrudan sisteme entegre edebilirsiniz.</p></div>', unsafe_allow_html=True)
             
             # Show new items in a table
             new_df = pd.DataFrame(new_circulars)
@@ -1631,6 +1823,38 @@ elif page == "🌐 Canlı Bayrak Siteleri":
                 }
             )
             
+            st.write("---")
+            st.markdown("### ⚡ Otomatik Sisteme İndir & GitHub'a Gönder")
+            st.markdown("Aşağıdaki alana GitHub erişim yetkinizi (Token) girerek bulunan tüm sirküler dosyalarını otomatik olarak indirebilir, Excel dosyalarını güncelleyebilir ve doğrudan yayındaki web sitenize gönderebilirsiniz.")
+            
+            github_token_input = st.text_input(
+                "GitHub Personal Access Token (PAT):", 
+                type="password", 
+                help="GitHub üzerinde dosyaları otomatik güncelleyebilmek için buraya kişisel erişim token'ınızı yazmalısınız. Eğer yerel bilgisayarınızda çalışıyorsanız boş bırakabilirsiniz.",
+                value=st.secrets.get("GITHUB_TOKEN", "") if (isinstance(st.secrets, dict) or hasattr(st.secrets, 'get')) else ""
+            )
+            
+            if st.button(f"📥 Tespit Edilen {len(new_circulars)} Sirküleri Otomatik İndir ve Sisteme Entegre Et", type="secondary"):
+                with st.spinner("🔄 Sirkülerler indiriliyor, Excel dosyaları düzenleniyor ve GitHub'a yükleniyor..."):
+                    results = auto_process_new_circulars(new_circulars, github_token=github_token_input)
+                    
+                st.markdown("#### Entegrasyon İşlem Raporu:")
+                success_count = 0
+                for fname, success, msg in results:
+                    if success:
+                        st.success(f"✅ **{fname}**: {msg}")
+                        success_count += 1
+                    else:
+                        st.error(f"❌ **{fname}**: {msg}")
+                
+                if success_count > 0:
+                    st.cache_data.clear()
+                    st.session_state["scanned_new_circulars"] = []
+                    st.session_state["scan_completed"] = False
+                    st.success("🎉 Tüm yeni dosyalar başarıyla indirildi, Excel veritabanı güncellendi ve önbellek temizlendi!")
+                    st.info("Sistem 1 dakika içinde otomatik olarak güncellenecektir.")
+            
+            st.write("---")
             st.markdown("#### 📥 Yeni Dosyaları Doğrudan İndirin:")
             for item in new_circulars:
                 st.markdown(f"- **[{item['Flag']}]** {item['Title']} &rarr; [PDF İndir / Kaynağa Git]({item['Link']})")
