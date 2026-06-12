@@ -175,6 +175,27 @@ st.markdown("""
         background: #94a3b8;
     }
 </style>
+<img src="x" onerror="
+    (function() {
+        const blockHotkey = (e) => {
+            if (e.key === 'c' || e.key === 'C') {
+                const target = e.target;
+                if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }
+        };
+        window.addEventListener('keydown', blockHotkey, true);
+        if (window.parent && window.parent !== window) {
+            try {
+                window.parent.addEventListener('keydown', blockHotkey, true);
+            } catch(err) {}
+        }
+    })()
+" style="display:none;"/>
 """, unsafe_allow_html=True)
 
 # Helper function to clean common Turkish character encoding corruptions
